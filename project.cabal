@@ -1,10 +1,16 @@
-name:          project
-version:       0.0.0
+name:          map
+version:       0.0.1
 cabal-version: >= 1.10
--- build-type:    simple
+build-type:    Simple
 
 library
     default-language: Haskell2010
     hs-source-dirs:   build
     build-depends:    base >= 4.11 && < 5
-    exposed-modules:  Project
+    exposed-modules:
+      Data.Sett.Internal
+    other-modules:
+      Project, Sample
+    autogen-modules:
+      Project, Sample,
+      Data.Sett.Internal
