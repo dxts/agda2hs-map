@@ -8,69 +8,86 @@ open import Data.Utils.Reasoning
 open import Data.Utils.IntegerProofs
 
 
-{--------------------
-  Functions to enforce preconditions
---------------------}
 
-_∈_ : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-      → k → Map k a { lower } { upper } → Bool
-_ ∈ Tip = false
-k ∈ (Bin _ kx _ l r) with (compare k kx)
-... | LT = k ∈ l
-... | GT = k ∈ r
-... | EQ = true
+postulate
+  ltRewrite1 : (x y : Nat) → (prf : compare x y ≡ LT)
+          → IsFalse (y < x)
+  ltRewrite2 : (x y : Nat) → (prf : compare x y ≡ LT)
+          → (x < y) ≡ true
 
-_[_]≤_ : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-         → (n : Int) → (_ : IsNonNegativeInt n) → Map k a { lower } { upper } → Bool
-_[_]≤_ n nPos map with (compare n (size map))
-... | LT = true
-... | GT = false
-... | EQ = false
+  gtRewrite1 : (x y : Nat) → (prf : compare x y ≡ GT)
+          → IsFalse (x < y)
+  gtRewrite2 : (x y : Nat) → (prf : compare x y ≡ GT)
+          → IsFalse ((_-_ x y {{gtRewrite1 x y prf}}) < 1)
 
+module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
+  {--------------------
+    Functions to enforce preconditions
+  --------------------}
 
-{--------------------
-  Functions to transform proofs, eg : shrinking pre-condition proofs
---------------------}
-
-sizeIsPos : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-            → (map : Map k a {lower} {upper}) → IsNonNegativeInt (size map)
-sizeIsPos Tip = tt
-sizeIsPos (Bin sz {szPos} _ _ _ _) = szPos
-
-∈L : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-          → (sz : Int) {szPrf : IsNonNegativeInt sz} (key kx : k) (x : a) (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
-          → (eq : compare key kx ≡ LT)
-          → (prf : IsTrue (key ∈ (Bin sz {szPrf} kx x l r)))
-          → (IsTrue (key ∈ l))
-∈L sz key kx x l r eq prf with compare key kx
-... | LT = prf
+  _∈_ : ∀ {lower upper : [ k ]∞} → (key : k)
+        → Map k a { lower } { upper } → Set
+  _ ∈ Tip = ⊥
+  k ∈ (Bin _ kx _ l r) with (compare k kx)
+  ... | LT = k ∈ l
+  ... | GT = k ∈ r
+  ... | EQ = ⊤
 
 
-∈R : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-          → (sz : Int) {szPrf : IsNonNegativeInt sz} (key kx : k) (x : a) (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
-          → (eq : compare key kx ≡ GT)
-          → (prf : IsTrue (key ∈ (Bin sz {szPrf} kx x l r)))
-          → (IsTrue (key ∈ r))
-∈R sz key kx x l r eq prf with compare key kx
-... | GT = prf
+  -- data [_]∈_ {lower upper : [ k ]∞} (n : Nat) :
+  --         Map k a { lower } { upper } → Set where
+  --   here : n → (kx : k) (x : a) (l : Map k a {lower} {[ kx ]})
+  --         (r : Map k a {[ kx ]} {[ upper ]}) → [ n ]∈ (Bin (n + 1) kx x l r)
+  -- -- [ n ]∈ Tip = (n > 0) ≡ true
+  -- -- [ n ]∈ (Bin sz _ _ l r) with (compare n sz)
+  -- -- ... | LT = (n < sz) ≡ true
+  -- -- ... | GT = (n > sz) ≡ true
+  -- -- ... | EQ = (n == sz) ≡ true
 
 
 
-∈[L] : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-        → (n : Int) {nPrf : IsNonNegativeInt n} (l : Map k a {lower} {upper})
-            → (eq : compare n (size l) ≡ LT)
-            → IsTrue (n [ nPrf ]≤ l)
-∈[L] n l eq with (compare n (size l))
-... | LT = IsTrue.itsTrue
+  {--------------------
+    Functions to transform proofs, eg : shrinking pre-condition proofs
+  --------------------}
 
-postulate ∈[R] : {k a : Set} → ∀ {lower upper : [ k ]∞} → ⦃ _ : Ord k ⦄
-                  → (n : Int) {nPos : IsNonNegativeInt n} (l r : Map k a {lower} {upper})
-                  → (eq : compare n (size l) ≡ GT) {iPos : IsNonNegativeInt (n - (size l) - 1)}
-                  →  IsTrue ((n - (size l) - 1) [ iPos ]≤ r)
--- ∈[R] : {k a : Set} → (n : Int) {nPos : IsNonNegativeInt n} (l r : Map k a) {lPos : IsNonNegativeInt (size l)}
---             → (eq : compare n (size l) ≡ GT)
---             → {bogus : (n - (size l) - 1) ≡ (size r - 1)} {iPos : IsNonNegativeInt (n - (size l) - 1)}
---             → IsTrue ((n - (size l) - 1) [ iPos ]≤ r)
--- ∈[R] n l r eq {bog} with (compare n (size l))
--- ... | GT = {!  IsTrue.itsTrue !}
+
+  ∈L : ∀ {lower upper : [ k ]∞}
+            → (sz : Nat) (key kx : k) (x : a)
+            → (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
+            → (szVal : sz ≡ (size l) + (size r) + 1)
+            → (eq : compare key kx ≡ LT)
+            → (prf : key ∈ (Bin sz kx x l r {{szVal}}))
+            → (key ∈ l)
+  ∈L sz key kx x l r szVal eq prf with (compare key kx)
+  ... | LT = prf
+
+
+  ∈R : ∀ {lower upper : [ k ]∞}
+            → (sz : Nat) (key kx : k) (x : a)
+            → (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
+            → (szVal : sz ≡ (size l) + (size r) + 1)
+            → (eq : compare key kx ≡ GT)
+            → (prf : key ∈ (Bin sz kx x l r {{szVal}}))
+            → (key ∈ r)
+  ∈R sz key kx x l r szVal eq prf with compare key kx
+  ... | GT = prf
+
+
+  ∈[L] : ∀ {lower upper : [ k ]∞}
+          → (n : Nat) (l : Map k a {lower} {upper})
+          → (eq : compare n (size l) ≡ LT)
+          → (n < (size l)) ≡ true
+  ∈[L] n l eq = ltRewrite2 n (size l) eq
+
+  postulate
+    ∈[R] : ∀ {lower upper : [ k ]∞}
+          → (n sz : Nat) (kx : k) (x : a) (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
+          (szVal : sz ≡ (size l) + (size r) + 1) (nValid :  (n < sz) ≡ true)
+          → (eq : compare n (size l) ≡ GT)
+          → {nLB : IsFalse (n < size l)} {nLB2 : IsFalse ((_-_ n (size l) {{nLB}}) < 1)}
+          → ((_-_ (_-_ n  (size l) {{nLB}}) 1 {{nLB2}}) < size r) ≡ true
+  -- ∈[R] n sz kx x l r szVal {nValid} eq {nLB} {nLB2} with (compare n (size l))
+  -- ... | GT = {!   !}
+
+open Precondition public

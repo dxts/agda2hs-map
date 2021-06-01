@@ -41,452 +41,71 @@ open import Data.Utils.Reasoning
 open import Data.Utils.IntegerProofs
 open import Data.Map.PreconditionProofs
 
-{--------------------------------------------------------------------------
-  All type definitions have been hoisted to the top to allow mutual recursion
-  while still maintaining the order of definition of functions from the library.
---------------------------------------------------------------------------}
+{---------------------
+  Library functions
+---------------------}
 
+open import Data.Map.Internal.Query
 
-{-------------------
-  Query
--------------------}
 
-null : {k a : Set} → ⦃ Ord k ⦄ → Map k a → Bool
+open import Data.Map.Internal.Operators
 
--- defined in Map.Internal.Datatype
--- size : {k a : Set} → Map k a → Int
 
-lookup : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe a
+open import Data.Map.Internal.Construction
 
-member : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Bool
 
-notMember : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Bool
+open import Data.Map.Internal.Inserting
 
-find : {k a : Set} → ⦃ kOrd : Ord k ⦄ → (key : k) → (map : Map k a) → {IsTrue (key ∈ map)} → a
 
-findWithDefault : {k a : Set} → ⦃ Ord k ⦄ → a → k → Map k a → a
+open import Data.Map.Internal.Deletion
 
-lookupLT : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
 
-lookupGT : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
+open import Data.Map.Internal.Indexing
 
-lookupLE : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
 
-lookupGE : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
+open import Data.Map.Internal.MinMax
 
-{-------------------
-  Operators
--------------------}
 
-_!_ :  {k a : Set} → ⦃ kOrd : Ord k ⦄ → (map : Map k a) → (key : k) → {IsTrue (key ∈ map)} → a
+open import Data.Map.Internal.Union
 
-_!?_ : {k a : Set} → ⦃ Ord k ⦄ → Map k a → k → Maybe a
 
-_\\_ : {k a : Set} → ⦃ Ord k ⦄ → Map k a → Map k b → Map k a
+open import Data.Map.Internal.Differences
 
 
-{-------------------
-  Construction
--------------------}
+open import Data.Map.Internal.Intersection
 
-empty : {k a : Set} → Map k a
-
-singleton : {k a : Set} → k → a → Map k a
-
-{-------------------
-  Insertion
--------------------}
-
-insert : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → k → a → (m : Map k a) → Map k a
-
-insertR : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → k → a → (m : Map k a) → Map k a
-
-insertWith : {k a : Set} → ⦃ Ord k ⦄ → (a → a → a) → k → a → Map k a → Map k a
-
-insertWithR : {k a : Set} → ⦃ Ord k ⦄ → (a → a → a) → k → a → Map k a → Map k a
-
-insertWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → a → a) → k → a → Map k a → Map k a
-
-insertWithKeyR : {k a : Set} → ⦃ Ord k ⦄ → (k → a → a → a) → k → a → Map k a → Map k a
-
-insertLookupWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → a → a) → k → a → Map k a → (Maybe a × Map k a)
-
-
-{-------------------
-  Deletion
--------------------}
-
-delete : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq (Map k a) ⦄ → k → Map k a → Map k a
-
-adjust : {k a : Set} → ⦃ Ord k ⦄ → (a → a) → k → Map k a → Map k a
-
-adjustWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → a) → k → Map k a → Map k a
-
-update : {k a : Set} → ⦃ Ord k ⦄ → (a → Maybe a) → k → Map k a → Map k a
-
-updateWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → Maybe a) → k → Map k a → Map k a
-
-updateLookupWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → Maybe a) → k → Map k a → (Maybe a × Map k a)
-
-alter : {k a : Set} → ⦃ Ord k ⦄ → (Maybe a → Maybe a) → k → Map k a → Map k a
-
--- [TODO] `alterF` and related methods
-
-
-{-------------------
-  Indexing
--------------------}
-
-findIndex : {k a : Set} → ⦃ kOrd : Ord k ⦄ → (key : k) → (map : Map k a) → {IsTrue (key ∈ map)} → Int
-
-lookupIndex : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe Int
-
-elemAt : {k a : Set} → (n : Int) {pos : IsNonNegativeInt n} → (map : Map k a) → {IsTrue (n [ pos ]≤ map)} → k × a
-
-take : {k a : Set} →  Int → Map k a → Map k a
-
-drop : {k a : Set} →  Int → Map k a → Map k a
-
-splitAt : {k a : Set} →  Int → Map k a → (Map k a × Map k a)
-
-updateAt : {k a : Set} → (k → a → Maybe a) → (n : Int) {pos : IsNonNegativeInt n} → (map : Map k a) → {IsTrue (n [ pos ]≤ map)} → Map k a
-
-deleteAt : {k a : Set} → (n : Int) {pos : IsNonNegativeInt n} → (map : Map k a) → {IsTrue (n [ pos ]≤ map)} → Map k a
-
-
-{-------------------
-  Minimal, Maximal
--------------------}
-
-lookupMinSure : {k a : Set} → k → a → Map k a → k × a
-
-lookupMin : {k a : Set} → Map k a → Maybe (k × a)
-
-findMin : {k a : Set} → (map : Map k a) → {IsTrue (not (null map))} → k × a
-
-lookupMaxSure : {k a : Set} → k → a → Map k a → k × a
-
-lookupMax : {k a : Set} → Map k a → Maybe (k × a)
-
-findMax : {k a : Set} → (map : Map k a) → {IsTrue (not (null map))} → k × a
-
-deleteMin : {k a : Set} → Map k a → Map k a
-
-deleteMax : {k a : Set} → Map k a → Map k a
-
-updateMin : {k a : Set} → (a → Maybe a) → Map k a → Map k a
-
-updateMax : {k a : Set} → (a → Maybe a) → Map k a → Map k a
-
-updateMinWithKey : {k a : Set} → (k → a → Maybe a) → Map k a → Map k a
-
-updateMaxWithKey : {k a : Set} → (k → a → Maybe a) → Map k a → Map k a
-
-minViewWithKey : {k a : Set} → Map k a → Maybe ((k × a) × Map k a)
-
-maxViewWithKey : {k a : Set} → Map k a → Maybe ((k × a) × Map k a)
-
-minView : {k a : Set} → Map k a → Maybe (a × Map k a)
-
-maxView : {k a : Set} → Map k a → Maybe (a × Map k a)
-
-
-{-------------------
-  Union
--------------------}
-
-unions : {k a : Set} → ⦃ Foldable f ⦄ → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → f (Map k a) → Map k a
-
-unionsWith : {k a : Set} → ⦃ Foldable f ⦄ → ⦃ Ord k ⦄ → (a → a → a) → f (Map k a) → Map k a
-
-union : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → Map k a → Map k a → Map k a
-
-{-------------------
-  Union with a combining function.
--------------------}
-
-unionWith : {k a : Set} → ⦃ Ord k ⦄ → (a → a → a) → Map k a → Map k a → Map k a
-
-unionWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → a → a) → Map k a → Map k a → Map k a
-
-{-------------------
-  Difference
--------------------}
-
-difference : {k a : Set} → ⦃ Ord k ⦄ → Map k a → Map k b → Map k a
-
-withoutKeys : {k a : Set} → ⦃ Ord k ⦄ → Map k a → Sett k → Map k a
-
--- differenceWith : {k a : Set} → ⦃ Ord k ⦄ → (a → b → Maybe a) → Map k a → Map k b → Map k a
-
--- differenceWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k → a → b → Maybe a) → Map k a → Map k b → Map k a
-
-{-------------------
-  Intersection
--------------------}
-
-intersection : {k a b : Set} → ⦃ Ord k ⦄ → Map k a → Map k b → Map k a
-
-restrictKeys : {k a : Set} → ⦃ Ord k ⦄ → Map k a → Sett k → Map k a
-
-intersectionWith : {k a b c : Set} → ⦃ Ord k ⦄ → (a → b → c) → Map k a → Map k b → Map k c
-
-intersectionWithKey : {k a b c : Set} → ⦃ Ord k ⦄ → (k → a → b → c) → Map k a → Map k b → Map k c
-
-
-{-------------------
-  Disjoint
--------------------}
-
-disjoint : {k a b : Set} → ⦃ Ord k ⦄ → Map k a → Map k b → Bool
-
-
-{-------------------
-  Compose
--------------------}
 
 -- compose : {a b c : Set} → ⦃ Ord b ⦄ → Map b c → Map a b → Map a c
 
 
-{-------------------
-  merge
--------------------}
+open import Data.Map.Internal.Merging
 
--- [TODO] `merge` function and it's helpers.
 
-{-------------------
-  mergeWithKey
--------------------}
+open import Data.Map.Internal.Submapping
 
-mergeWithKey : {k a b c : Set} → ⦃ Ord k ⦄ → ⦃ Ord b ⦄ → (k → a → b → Maybe c)
-             → (Map k a → Map k c) → (Map k b → Map k c)
-             → Map k a → Map k b → Map k c
 
+open import Data.Map.Internal.Filtering
 
-{-------------------
-  Submap
--------------------}
 
-isSubmapOf : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → Map k a -> Map k a -> Bool
+open import Data.Map.Internal.Mapping
 
-isSubmapOfBy : {k a b : Set} → ⦃ Ord k ⦄ → (a -> b -> Bool) -> Map k a -> Map k b -> Bool
 
-submap' : {a b c : Set} → ⦃ Ord a ⦄ → (b -> c -> Bool) -> Map a b -> Map a c -> Bool
+open import Data.Map.Internal.Folding
 
-isProperSubmapOf : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → Map k a -> Map k a -> Bool
 
-isProperSubmapOfBy : {k a b : Set} → ⦃ Ord k ⦄ → (a -> b -> Bool) -> Map k a -> Map k b -> Bool
+open import Data.Map.Internal.Lists
 
 
-{-------------------
-  Filter and partition
--------------------}
+open import Data.Map.Internal.Splitting
 
-filter : {k a : Set} → (a -> Bool) -> Map k a -> Map k a
 
-filterWithKey : {k a : Set} → (k -> a -> Bool) -> Map k a -> Map k a
+open import Data.Map.Internal.Linking
 
-filterWithKeyA : {k a : Set} → {f : Set → Set} → ⦃ Applicative f ⦄ → (k -> a -> f Bool) -> Map k a -> f (Map k a)
 
-takeWhileAntitone : {k a : Set} → (k -> Bool) -> Map k a -> Map k a
+open import Data.Map.Internal.Balancing
 
-dropWhileAntitone : {k a : Set} → (k -> Bool) -> Map k a -> Map k a
 
-spanAntitone : {k a : Set} → (k -> Bool) -> Map k a -> (Map k a) × (Map k a)
-
-partition : {k a : Set} → (a -> Bool) -> Map k a -> (Map k a) × (Map k a)
-
-partitionWithKey : {k a : Set} → (k -> a -> Bool) -> Map k a -> (Map k a) × (Map k a)
-
-mapMaybe : {k a : Set} → (a -> Maybe b) -> Map k a -> Map k b
-
-mapMaybeWithKey : {k a : Set} → (k -> a -> Maybe b) -> Map k a -> Map k b
-
-traverseMaybeWithKey : {k a b : Set} → {f : Set → Set} → ⦃ Applicative f ⦄ → (k -> a -> f (Maybe b)) -> Map k a -> f (Map k b)
-
-mapEither : {k a b c : Set} → (a -> Either b c) -> Map k a -> (Map k b) × (Map k c)
-
-mapEitherWithKey : {k a b c : Set} → (k -> a -> Either b c) -> Map k a -> (Map k b) × (Map k c)
-
-
-{-------------------
-  Mapping
--------------------}
-
-map : {k a : Set} → (a -> b) -> Map k a -> Map k b
-
-mapWithKey : {k a : Set} → (k -> a -> b) -> Map k a -> Map k b
-
-traverseWithKey : {k a : Set} → {t : Set → Set} → ⦃ Applicative t ⦄ → (k -> a -> t b) -> Map k a -> t (Map k b)
-
-mapAccum : {k a b c : Set} → (a -> b -> (a × c)) -> a -> Map k b -> (a × Map k c)
-
-mapAccumWithKey : {k a b c : Set} → (a -> k -> b -> (a × c)) -> a -> Map k b -> (a × Map k c)
-
-mapAccumL : {k a b c : Set} → (a -> k -> b -> (a × c)) -> a -> Map k b -> (a × Map k c)
-
-mapAccumRWithKey : {k a b c : Set} → (a -> k -> b -> (a × c)) -> a -> Map k b -> (a × Map k c)
-
-mapKeys : {k1 k2 a : Set} → ⦃ Ord k2 ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k2 a) ⦄ -> (k1 -> k2) -> Map k1 a -> Map k2 a
-
-mapKeysWith : {k1 k2 a : Set} → ⦃ Ord k2 ⦄ -> (a -> a -> a) -> (k1 -> k2) -> Map k1 a -> Map k2 a
-
-mapKeysMonotonic : {k1 k2 a : Set} → (k1 -> k2) -> Map k1 a -> Map k2 a
-
-
-{-------------------
-  Folds
--------------------}
-
-foldr : {k a b : Set} → (a -> b -> b) -> b -> Map k a -> b
-
-foldr' : {k a b : Set} → (a -> b -> b) -> b -> Map k a -> b
-
-foldl : {k a b : Set} → (a -> b -> a) -> a -> Map k b -> a
-
-foldl' : {k a b : Set} → (a -> b -> a) -> a -> Map k b -> a
-
-foldrWithKey : {k a b : Set} → (k -> a -> b -> b) -> b -> Map k a -> b
-
-foldrWithKey' : {k a b : Set} → (k -> a -> b -> b) -> b -> Map k a -> b
-
-foldlWithKey : {k a b : Set} → (a -> k -> b -> a) -> a -> Map k b -> a
-
-foldlWithKey' : {k a b : Set} → (a -> k -> b -> a) -> a -> Map k b -> a
-
-foldMapWithKey : {k a m : Set} → ⦃ Monoid m ⦄ -> (k -> a -> m) -> Map k a -> m
-
-{-------------------
-  List variations
--------------------}
-
-elems : {k a : Set} → Map k a -> List a
-
-keys  : {k a : Set} → Map k a -> List k
-
-assocs : {k a : Set} → Map k a -> List (k × a)
-
-keysSet : {k a : Set} → Map k a -> Sett.Sett k
-
-fromSet : {k a : Set} → (k -> a) -> Sett.Sett k -> Map k a
-
-
-{-------------------
-  Lists
--------------------}
-
-fromList : {k a : Set} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → List (k × a) -> Map k a
-
-fromListWith : {k a : Set} → ⦃ Ord k ⦄ → (a -> a -> a) -> List (k × a) -> Map k a
-
-fromListWithKey : {k a : Set} → ⦃ Ord k ⦄ → (k -> a -> a -> a) -> List (k × a) -> Map k a
-
-toList : {k a : Set} → Map k a -> List (k × a)
-
-toAscList : {k a : Set} → Map k a -> List (k × a)
-
-toDescList : {k a : Set} → Map k a -> List (k × a)
-
-foldrFB : {k a : Set} → (k -> a -> b -> b) -> b -> Map k a -> b
-
-foldlFB : {k a : Set} → (a -> k -> b -> a) -> a -> Map k b -> a
-
-fromAscList : {k a : Set} → ⦃ Eq k ⦄ → List (k × a) -> Map k a
-
-fromDescList : {k a : Set} → ⦃ Eq k ⦄ → List (k × a) -> Map k a
-
-fromAscListWith : {k a : Set} → ⦃ Eq k ⦄ → (a -> a -> a) -> List (k × a) -> Map k a
-
-fromDescListWith : {k a : Set} → ⦃ Eq k ⦄ → (a -> a -> a) -> List (k × a) -> Map k a
-
-fromAscListWithKey : {k a : Set} → ⦃ Eq k ⦄ → (k -> a -> a -> a) -> List (k × a) -> Map k a
-
-fromDescListWithKey : {k a : Set} → ⦃ Eq k ⦄ → (k -> a -> a -> a) -> List (k × a) -> Map k a
-
-fromDistinctAscList : {k a : Set} → List (k × a) -> Map k a
-
-fromDistinctDescList : {k a : Set} → List (k × a) -> Map k a
-
-
-{-------------------
-  Split
--------------------}
-
-split : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → (Map k a × Map k a)
-
-splitLookup : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → (Map k a × Maybe a × Map k a)
-
-splitMember : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → (Map k a × Bool × Map k a)
-
-{-------------------
-  Link
--------------------}
-
-link : {k a : Set} → k → a → Map k a → Map k a → Map k a
-
-insertMax : {k a : Set} → k → a → Map k a → Map k a
-
-insertMin : {k a : Set} → k → a → Map k a → Map k a
-
-
-{-------------------
-  link2
--------------------}
-
-link2 : {k a : Set} → Map k a → Map k a → Map k a
-
-
-{-------------------
-  glue
--------------------}
-
-glue : {k a : Set} → Map k a → Map k a → Map k a
-
-
-data MinView (k : Set) (a : Set) : Set where
-  MinViewCon : k → a → (Map k a) → MinView k a
-
-data MaxView (k : Set) (a : Set) : Set where
-  MaxViewCon : k → a → (Map k a) → MaxView k a
-
-minViewSure : {k a : Set} → k → a → Map k a → Map k a → MinView k a
-
-maxViewSure : {k a : Set} → k → a → Map k a → Map k a → MaxView k a
-
-deleteFindMin : {k a : Set} → (map : Map k a) → {IsTrue (not (null map))} → ((k × a) × Map k a)
-
-deleteFindMax : {k a : Set} → (map : Map k a) → {IsTrue (not (null map))} → ((k × a) × Map k a)
-
-
-{-------------------
-  Balance
--------------------}
-
-delta : Int
-delta = 3
-
-ratio : Int
-ratio = 2
-
-balance : {k a : Set} → k → a → Map k a → Map k a → Map k a
-
-balanceL : {k a : Set} → k → a → Map k a → Map k a → Map k a
-
-balanceR : {k a : Set} → k → a → Map k a → Map k a → Map k a
-
-
-{-------------------
-  bin
--------------------}
-
-bin : {k a : Set} → k → a → Map k a → Map k a → Map k a
-
-
-{-------------------
-  splitRoot
--------------------}
-
-splitRoot : {k a : Set} → Map k a → List (Map k a)
+open import Data.Map.Internal.Extras
 
 
 {--------------------------------------------------------------------------
@@ -501,118 +120,6 @@ instance
   iMonoidMap : {k a : Set} → ⦃ _ : Ord k ⦄ ⦃ _ : Eq a ⦄ ⦃ _ : Eq (Map k a) ⦄
                → Monoid (Map k a)
   iMonoidMap .mempty = empty
-
-{-------------------
-  Query
--------------------}
-
--- null : {k a : Set} → Map k a → Bool
-null Tip = true
-null (Bin _ _ _ _ _) = false
-{-# COMPILE AGDA2HS null #-}
-
--- lookup : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe a
-lookup k Tip = Nothing
-lookup k (Bin _ kx x l r) = case (compare k kx) of
-    λ {
-      LT → lookup k l
-    ; GT → lookup k r
-    ; EQ → Just x
-    }
-{-# COMPILE AGDA2HS lookup #-}
-
--- member : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Bool
-member _ Tip = false
-member k (Bin _ kx _ l r) = case (compare k kx) of
-    λ {
-      LT → member k l
-    ; GT → member k r
-    ; EQ → true
-    }
-{-# COMPILE AGDA2HS member #-}
-
--- notMember : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Bool
-notMember k m = not (member k m)
-{-# COMPILE AGDA2HS notMember #-}
-
--- find : {k a : Set} → ⦃ kOrd : Ord k ⦄ → (key : k) (map : Map k a) → {IsTrue (key ∈ map)} → a
-find {k} {a} {{kOrd}} key t@(Bin sz {szPrf} kx x l r) {prf} = match (compare {{kOrd}} key kx) {refl}
-  where
-    match : (o : Ordering) → {eq : compare {{kOrd}} key kx ≡ o} → a
-    match LT {eq} = find key l {∈L sz {szPrf} key kx x l r eq prf}
-    match GT {eq} = find key r {∈R sz {szPrf} key kx x l r eq prf}
-    match EQ {eq} = x
-{-# COMPILE AGDA2HS find #-}
-
--- findWithDefault : {k a : Set} → ⦃ Ord k ⦄ → a → k → Map k a → a
-findWithDefault def _ Tip               = def
-findWithDefault def k (Bin _ kx x l r)  = case (compare k kx) of
-    λ {
-      LT → findWithDefault def k l
-    ; GT → findWithDefault def k r
-    ; EQ → x
-    }
-{-# COMPILE AGDA2HS findWithDefault #-}
-
--- lookupLT : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
-lookupLT _ Tip              = Nothing
-lookupLT k (Bin _ kx x l r) = if k <= kx then (lookupLT k l)
-                                         else (goJust k kx x r)
-  where
-    goJust : {k a : Set} → ⦃ Ord k ⦄ → k → k → a → Map k a → Maybe (k × a)
-    goJust _ kx' x' Tip               = Just (kx' , x')
-    goJust k kx' x' (Bin _ kx x l r)  = if k <= kx then (goJust k kx' x' l)
-                                                   else (goJust k kx x r)
-{-# COMPILE AGDA2HS lookupLT #-}
-
--- lookupGT : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
-lookupGT _ Tip              = Nothing
-lookupGT k (Bin _ kx x l r) = if k < kx then (goJust k kx x l)
-                                        else (lookupGT k r)
-  where
-    goJust : {k a : Set} → ⦃ Ord k ⦄ → k → k → a → Map k a → Maybe (k × a)
-    goJust _ kx' x' Tip               = Just (kx' , x')
-    goJust k kx' x' (Bin _ kx x l r)  = if k < kx then (goJust k kx x l)
-                                                  else (goJust k kx' x' r)
-{-# COMPILE AGDA2HS lookupGT #-}
-
--- lookupLE : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
-lookupLE _ Tip              = Nothing
-lookupLE k (Bin _ kx x l r) = case (compare k kx) of
-    λ {
-      LT → lookupLE k l
-    ; EQ → Just (kx , x)
-    ; GT → goJust k kx x r
-    }
-  where
-    goJust : {k a : Set} → ⦃ Ord k ⦄ → k → k → a → Map k a → Maybe (k × a)
-    goJust _ kx' x' Tip               = Just (kx' , x')
-    goJust k kx' x' (Bin _ kx x l r)  = case (compare k kx) of
-        λ {
-          LT → goJust k kx' x' l
-        ; EQ → Just (kx , x)
-        ; GT → goJust k kx x r
-        }
-{-# COMPILE AGDA2HS lookupLE #-}
-
--- lookupGE : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe (k × a)
-lookupGE _ Tip              = Nothing
-lookupGE k (Bin _ kx x l r) = case (compare k kx) of
-    λ {
-      LT → goJust k kx x l
-    ; EQ → Just (kx , x)
-    ; GT → lookupGE k r
-    }
-  where
-    goJust : {k a : Set} → ⦃ Ord k ⦄ → k → k → a → Map k a → Maybe (k × a)
-    goJust _ kx' x' Tip               = Just (kx' , x')
-    goJust k kx' x' (Bin _ kx x l r)  = case (compare k kx) of
-        λ {
-          LT → goJust k kx x l
-        ; EQ → Just (kx , x)
-        ; GT → goJust k kx' x' r
-        }
-{-# COMPILE AGDA2HS lookupGE #-}
 
 
 {-------------------
@@ -636,13 +143,7 @@ _\\_ m1 m2 = difference m1 m2
   Construction
 -------------------}
 
--- empty : {k a : Set} → Map k a
-empty = Tip
-{-# COMPILE AGDA2HS empty #-}
 
--- singleton : {k a : Set} → k → a → Map k a
-singleton k x = Bin 1 k x Tip Tip
-{-# COMPILE AGDA2HS singleton #-}
 
 
 {-------------------
@@ -851,111 +352,7 @@ alter f k (Bin sz {szPrf} kx x l r) = case (compare k kx) of
   Indexing
 -------------------}
 
--- findIndex : {k a : Set} → ⦃ kOrd : Ord k ⦄ → (key : k) → (map : Map k a) → {key ∈ map)} → Int
-findIndex = go 0
-  where
-    go : {k a : Set} → ⦃ kOrd : Ord k ⦄ → Int → (key : k) → (map : Map k a) → {IsTrue (key ∈ map)} → Int
-    go _   _ Tip              = error "Map.findIndex: element is not in the map"
-    go idx key (Bin sz {szPrf} kx x l r) {prf} = match (compare key kx) {refl}
-      where
-        match : (o : Ordering) → {eq : compare key kx ≡ o} → Int
-        match LT {eq} = go idx key l {∈L sz {szPrf} key kx x l r eq prf}
-        match GT {eq} = go (idx + (size l) + 1) key r {∈R sz {szPrf} key kx x l r eq prf}
-        match EQ {eq} = idx + (size l)
-{-# COMPILE AGDA2HS findIndex #-}
 
--- lookupIndex : {k a : Set} → ⦃ Ord k ⦄ → k → Map k a → Maybe Int
-lookupIndex = go 0
-  where
-    go : {k a : Set} → ⦃ Ord k ⦄ → Int → k → Map k a → Maybe Int
-    go _   _ Tip              = Nothing
-    go idx k (Bin _ kx _ l r) = let sizeL = size l in case (compare k kx) of
-        λ {
-          LT → go idx k l
-        ; GT → go (idx + sizeL + 1) k r
-        ; EQ → Just (idx + sizeL)
-        }
-{-# COMPILE AGDA2HS lookupIndex #-}
-
--- elemAt : {k a : Set} → (n : Int) {pos : IsNonNegativeInt n} → (map : Map k a) → {IsTrue (n [ pos ]≤ map)} → k × a
-elemAt _ Tip = error "Map.elemAt: index out of range"
-elemAt {k} {a} i {iPos} (Bin sz kx x l r) {valid} = match (compare i sizeL) {refl}
-  where
-    sizeL = (size l)
-    match : (o : Ordering) → {eq : compare i sizeL ≡ o} → k × a
-    match LT {eq} = elemAt i {iPos} l {∈[L] i {iPos} l eq}
-    match GT {eq} = elemAt (i - sizeL - 1) {subtractionPos i sizeL {iPos} {sizeIsPos l} eq}
-                    r {∈[R] i {iPos} l r eq {subtractionPos i sizeL {iPos} {sizeIsPos l} eq}}
-    match EQ {eq} = (kx , x)
-{-# COMPILE AGDA2HS elemAt #-}
-
--- take : {k a : Set} →  Int → Map k a → Map k a
-take _ Tip = Tip
-take i m@(Bin _ kx x l r) = let sizeL = size l in if i >= size m then m else (if i <= 0 then Tip else (case (compare i sizeL) of
-    λ {
-      LT → take i l
-    ; GT → link kx x l (take (i - sizeL - 1) r)
-    ; EQ → l
-    }))
-{-# COMPILE AGDA2HS take #-}
-
--- drop : {k a : Set} →  Int → Map k a → Map k a
-drop _ Tip = Tip
-drop i m@(Bin _ kx x l r) = let sizeL = size l in if i >= size m then Tip else (if i <= 0 then m else (case (compare i sizeL) of
-    λ {
-      LT → link kx x (drop i l) r
-    ; GT → drop (i - sizeL - 1) r
-    ; EQ → insertMin kx x r
-    }))
-{-# COMPILE AGDA2HS drop #-}
-
--- splitAt : {k a : Set} →  Int → Map k a → (Map k a × Map k a)
-splitAt _ Tip = Tip , Tip
-splitAt i m@(Bin _ kx x l r) = let sizeL = size l in if i >= size m then (m , Tip) else (if i <= 0 then (Tip , m) else (case (compare i sizeL) of
-    λ {
-      LT → case (splitAt i l) of λ { (ll , lr) → ll , link kx x lr r }
-    ; GT → case (splitAt (i - sizeL - 1) r) of λ { (rl , rr) → link kx x l rl , rr }
-    ; EQ → l , insertMin kx x r
-    }))
-{-# COMPILE AGDA2HS splitAt #-}
-
--- updateAt : {k a : Set} → (k → a → Maybe a) → (n : Int) {pos : IsNonNegativeInt n} → (map : Map k a) → {IsTrue (n [ pos ]≤ map)} → Map k a
-updateAt f i Tip = error "Map.updateAt: index out of range"
-updateAt {k} {a} f i {iPos} (Bin sz {szPos} kx x l r) = match (compare i sizeL) {refl}
-  where
-    sizeL = (size l)
-    match : (o : Ordering) → {eq : compare i sizeL ≡ o} → Map k a
-    match LT {eq} = balanceR kx x (updateAt f i {iPos} l {∈[L] i {iPos} l eq}) r
-    match GT {eq} = balanceL kx x l (updateAt f (i - sizeL - 1)
-                                      {subtractionPos i sizeL {iPos} {sizeIsPos l} eq}
-                                      r
-                                      { ∈[R] i {iPos} l r eq
-                                        {subtractionPos i sizeL {iPos} {sizeIsPos l} eq}
-                                      }
-                                    )
-    match EQ {eq} = case (f kx x) of
-      λ {
-        (Just x') → Bin sz {szPos} kx x' l r
-      ; Nothing → glue l r
-      }
-{-# COMPILE AGDA2HS updateAt #-}
-
--- deleteAt : {k a : Set} → (n : Int) {pos : IsNonNegativeInt n} → (map : Map k a) → {IsTrue (n [ pos ]≤ map)} → Map k a
-deleteAt i Tip = error "Map.updateAt: index out of range"
-deleteAt {k} {a} i {iPos} (Bin sz kx x l r) = match (compare i sizeL) {refl}
-  where
-    sizeL = (size l)
-    match : (o : Ordering) → {eq : compare i sizeL ≡ o} → Map k a
-    match LT {eq} = balanceR kx x (deleteAt i {iPos} l {∈[L] i {iPos} l eq}) r
-    match GT {eq} = balanceL kx x l (deleteAt (i - sizeL - 1)
-                                      {subtractionPos i sizeL {iPos} {sizeIsPos l} eq}
-                                      r
-                                      { ∈[R] i {iPos} l r eq
-                                        {subtractionPos i sizeL {iPos} {sizeIsPos l} eq}
-                                      }
-                                    )
-    match EQ {eq} = glue l r
-{-# COMPILE AGDA2HS deleteAt #-}
 
 {-------------------
   Minimal, Maximal
