@@ -16,6 +16,7 @@ data Singleton {a} {A : Set a} (x : A) : Set a where
 inspect : ∀ {a} {A : Set a} (x : A) → Singleton x
 inspect x = x with≡ refl
 
+
 {-----
   Equational reasoning methods
 -----}

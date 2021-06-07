@@ -7,29 +7,65 @@ open import Haskell.Prelude
 import Prelude
 #-}
 
-open import Data.Map.Datatype
+open import Data.Map.Internal.Datatype
 {-# FOREIGN AGDA2HS
-import Data.Map.Datatype
+import Data.Map.Internal.Datatype
 #-}
+
+delta : Nat
+delta = 3
+
+ratio : Nat
+ratio = 2
 
 module Balancing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
-  delta : Int
-  delta = 3
+  balance : (kx : k) → a → Map k a  → Map k a → Map k a
+  balance k x Tip Tip                   = Bin 1 k x Tip Tip
+  balance k x Tip r@(Bin _ _ _ Tip Tip) = bin k x Tip r
+  balance k x Tip r@(Bin _ rk rx Tip rr@(Bin _ _ _ _ _))     = bin rk rx (Bin 1 k x Tip Tip) rr
+  balance k x Tip r@(Bin _ rk rx rl@(Bin _ rlk rlx _ _) Tip) = bin rlk rlx (Bin 1 k x Tip Tip) (Bin 1 rk rx Tip Tip)
+  balance k x Tip r@(Bin rs rk rx rl@(Bin rls rlk rlx rll rlr) rr@(Bin rrs _ _ _ _)) =
+      if (rls < (ratio * rrs))
+      then (bin rk rx (bin k x Tip rl) rr)
+      else (bin rlk rlx (bin k x Tip rll) (bin rk rx rlr rr))
 
-  ratio : Int
-  ratio = 2
+  balance k x l@(Bin ls lk lx Tip Tip)                    Tip = bin k x l Tip
+  balance k x l@(Bin ls lk lx Tip lr@(Bin _ lrk lrx _ _)) Tip = bin lrk lrx (Bin 1 lk lx Tip Tip) (Bin 1 k x Tip Tip)
+  balance k x l@(Bin ls lk lx ll@(Bin _ _ _ _ _) Tip)     Tip = bin lk lx ll (Bin 1 k x Tip Tip)
+  balance k x l@(Bin ls lk lx ll@(Bin lls _ _ _ _) lr@(Bin lrs lrk lrx lrl lrr)) Tip =
+      if (lrs < (ratio * lls))
+      then (bin lk lx ll (bin k x lr Tip))
+      else (bin lrk lrx (bin lk lx ll lrl) (bin k x lrr Tip))
 
-  balance : ∀ {lower upper : [ k ]∞} → (kx : k) → a
-          → Map k a {lower} {[ kx ]} → Map k a {[ kx ]} {upper}
-          → Map k a {lower} {upper}
+  balance k x l@(Bin ls lk lx ll@(Bin lls _ _ _ _ ) lr@(Bin lrs lrk lrx lrl lrr)) r@(Bin rs rk rx rl@(Bin rls rlk rlx rll rlr) rr@(Bin rrs _ _ _ _)) =
+      if (rs > delta * ls)
+      then (if (rls < ratio * rrs)
+            then (bin rk rx (bin k x l rl) rr)
+            else (bin rlk rlx (bin k x l rll) (bin rk rx rlr rr)))
+      else (if (ls > delta * rs)
+            then (if (lrs < ratio * lls)
+                  then (bin lk lx ll (bin k x lr r))
+                  else (bin lrk lrx (bin lk lx ll lrl) (bin k x lrr r)))
+            else (bin k x l r)
+          )
+  balance k x l@(Bin ls lk lx ll@(Bin lls _ _ _ _ ) lr@(Bin lrs lrk lrx lrl lrr)) r@(Bin rs rk rx rl rr) =
+      if (ls > delta * rs)
+      then (if (lrs < ratio * lls)
+            then (bin lk lx ll (bin k x lr r))
+            else (bin lrk lrx (bin lk lx ll lrl) (bin k x lrr r)))
+      else (bin k x l r)
+  balance k x l@(Bin ls lk lx ll lr) r@(Bin rs rk rx rl@(Bin rls rlk rlx rll rlr) rr@(Bin rrs _ _ _ _)) =
+      if (rs > delta * ls)
+      then (if (rls < ratio * rrs)
+            then (bin rk rx (bin k x l rl) rr)
+            else (bin rlk rlx (bin k x l rll) (bin rk rx rlr rr)))
+      else (bin k x l r)
+  balance k x l@(Bin ls lk lx ll lr) r@(Bin rs rk rx rl rr) = (bin k x l r)
+  -- {-# COMPILE AGDA2HS balance #-}
 
-  balanceL : ∀ {lower upper : [ k ]∞} → (kx : k) → a
-          → Map k a {lower} {[ kx ]} → Map k a {[ kx ]} {upper}
-          → Map k a {lower} {upper}
+  balanceL : (kx : k) → a → Map k a → Map k a → Map k a
 
-  balanceR : ∀ {lower upper : [ k ]∞} → (kx : k) → a
-          → Map k a {lower} {[ kx ]} → Map k a {[ kx ]} {upper}
-          → Map k a {lower} {upper}
+  balanceR : (kx : k) → a → Map k a → Map k a → Map k a
 
 open Balancing public

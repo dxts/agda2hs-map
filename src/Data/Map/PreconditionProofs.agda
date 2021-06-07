@@ -2,11 +2,9 @@ module Data.Map.PreconditionProofs where
 
 open import Haskell.Prelude
 
-open import Data.Map.Datatype
+open import Data.Map.Internal.Datatype
 
 open import Data.Utils.Reasoning
-open import Data.Utils.IntegerProofs
-
 
 
 postulate
@@ -20,14 +18,22 @@ postulate
   gtRewrite2 : (x y : Nat) → (prf : compare x y ≡ GT)
           → IsFalse ((_-_ x y {{gtRewrite1 x y prf}}) < 1)
 
+
+{- Nat subtraction -}
+subtract : (x y z : Nat) → {_ : compare x y ≡ GT} {@(tactic defaultTo {x ≡ x} refl) _ : z ≡ 1} → Nat
+subtract x y z {eq} {_} = _-_ (_-_ x y {{gtRewrite1 x y eq}}) 1 {{gtRewrite2 x y eq}}
+
 module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   {--------------------
     Functions to enforce preconditions
   --------------------}
 
-  _∈_ : ∀ {lower upper : [ k ]∞} → (key : k)
-        → Map k a { lower } { upper } → Set
+  -- data _∈_ {k a : Set} : k → Map k a → Set where
+  --   here : (sz : Nat) -> (kx : k) (x : a) -> (l r : Map k a) -> (szVal : sz ≡ (size l) + (size r) + 1)
+  --         -> kx ∈ (Bin sz kx x l r {szVal})
+
+  _∈_ : (key : k) → Map k a → Set
   _ ∈ Tip = ⊥
   k ∈ (Bin _ kx _ l r) with (compare k kx)
   ... | LT = k ∈ l
@@ -35,58 +41,41 @@ module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
   ... | EQ = ⊤
 
 
-  -- data [_]∈_ {lower upper : [ k ]∞} (n : Nat) :
-  --         Map k a { lower } { upper } → Set where
-  --   here : n → (kx : k) (x : a) (l : Map k a {lower} {[ kx ]})
-  --         (r : Map k a {[ kx ]} {[ upper ]}) → [ n ]∈ (Bin (n + 1) kx x l r)
-  -- -- [ n ]∈ Tip = (n > 0) ≡ true
-  -- -- [ n ]∈ (Bin sz _ _ l r) with (compare n sz)
-  -- -- ... | LT = (n < sz) ≡ true
-  -- -- ... | GT = (n > sz) ≡ true
-  -- -- ... | EQ = (n == sz) ≡ true
-
-
-
   {--------------------
     Functions to transform proofs, eg : shrinking pre-condition proofs
   --------------------}
 
 
-  ∈L : ∀ {lower upper : [ k ]∞}
-            → (sz : Nat) (key kx : k) (x : a)
-            → (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
+  ∈L :  (sz : Nat) (key kx : k) (x : a)
+            → (l : Map k a ) (r : Map k a )
             → (szVal : sz ≡ (size l) + (size r) + 1)
             → (eq : compare key kx ≡ LT)
-            → (prf : key ∈ (Bin sz kx x l r {{szVal}}))
+            → (prf : key ∈ (Bin sz kx x l r {szVal}))
             → (key ∈ l)
   ∈L sz key kx x l r szVal eq prf with (compare key kx)
   ... | LT = prf
 
 
-  ∈R : ∀ {lower upper : [ k ]∞}
-            → (sz : Nat) (key kx : k) (x : a)
-            → (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
+  ∈R :  (sz : Nat) (key kx : k) (x : a)
+            → (l : Map k a ) (r : Map k a )
             → (szVal : sz ≡ (size l) + (size r) + 1)
             → (eq : compare key kx ≡ GT)
-            → (prf : key ∈ (Bin sz kx x l r {{szVal}}))
+            → (prf : key ∈ (Bin sz kx x l r {szVal}))
             → (key ∈ r)
   ∈R sz key kx x l r szVal eq prf with compare key kx
   ... | GT = prf
 
 
-  ∈[L] : ∀ {lower upper : [ k ]∞}
-          → (n : Nat) (l : Map k a {lower} {upper})
+  ∈[L] :  (n : Nat) (l : Map k a)
           → (eq : compare n (size l) ≡ LT)
           → (n < (size l)) ≡ true
   ∈[L] n l eq = ltRewrite2 n (size l) eq
 
   postulate
-    ∈[R] : ∀ {lower upper : [ k ]∞}
-          → (n sz : Nat) (kx : k) (x : a) (l : Map k a {lower} {[ kx ]}) (r : Map k a {[ kx ]} {upper})
+    ∈[R] :  (n sz : Nat) (l : Map k a ) (r : Map k a )
           (szVal : sz ≡ (size l) + (size r) + 1) (nValid :  (n < sz) ≡ true)
           → (eq : compare n (size l) ≡ GT)
-          → {nLB : IsFalse (n < size l)} {nLB2 : IsFalse ((_-_ n (size l) {{nLB}}) < 1)}
-          → ((_-_ (_-_ n  (size l) {{nLB}}) 1 {{nLB2}}) < size r) ≡ true
+          → ((subtract n (size l) 1 {eq} {refl}) < size r) ≡ true
   -- ∈[R] n sz kx x l r szVal {nValid} eq {nLB} {nLB2} with (compare n (size l))
   -- ... | GT = {!   !}
 

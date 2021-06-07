@@ -1,67 +1,226 @@
 module Data.Map.Internal.Lists where
 
-open import Haskell.Prelude hiding (toList)
+open import Haskell.Prelude hiding (toList; foldr; foldl)
 {-# FOREIGN AGDA2HS
-import Prelude hiding (toList)
+import Prelude hiding (toList, foldr, foldl)
 #-}
 
-open import Data.Map.Datatype
+open import Data.Map.Internal.Datatype
 {-# FOREIGN AGDA2HS
-import Data.Map.Datatype
+import Data.Map.Internal.Datatype
 #-}
 
 import Data.Sett.Internal as Sett
 {-# FOREIGN AGDA2HS
 import qualified Data.Set.Internal as Sett
 #-}
-open import Data.Sett.Internal using (Sett)
+
+open import Data.Utils.Bits
 {-# FOREIGN AGDA2HS
-import Data.Set.Internal (Set)
+import Data.Bits (shiftL, shiftR)
+#-}
+
+open import Data.Map.Internal.Construction
+{-# FOREIGN AGDA2HS
+import Data.Map.Internal.Construction
+#-}
+
+open import Data.Map.Internal.Folding
+{-# FOREIGN AGDA2HS
+import Data.Map.Internal.Folding
+#-}
+
+open import Data.Map.Internal.Inserting
+{-# FOREIGN AGDA2HS
+import Data.Map.Internal.Inserting
+#-}
+
+open import Data.Map.Internal.Linking
+{-# FOREIGN AGDA2HS
+import Data.Map.Internal.Linking
 #-}
 
 module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
-  elems : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> List a
+  toAscList :  Map k a -> List (k × a)
+  toAscList = foldrWithKey (λ k x xs -> (k , x) ∷ xs) []
 
-  keys  : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> List k
+  toDescList :  Map k a -> List (k × a)
+  toDescList = foldlWithKey (λ xs k x -> (k , x) ∷ xs) []
 
-  assocs : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> List (k × a)
 
-  keysSet : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> Sett.Sett k
+  elems :  Map k a -> List a
+  elems = foldr (_∷_) []
+  {-# COMPILE AGDA2HS elems #-}
 
-  fromSet : ∀ {lower upper : [ k ]∞} → (k -> a) -> Sett.Sett k -> Map k a {lower} {upper}
+  keys  :  Map k a -> List k
+  keys = foldrWithKey (λ k _ ks -> k ∷ ks) []
+  {-# COMPILE AGDA2HS keys #-}
 
-  fromList : ∀ {lower upper : [ k ]∞} → ⦃ Ord k ⦄ → ⦃ Eq a ⦄ → ⦃ Eq (Map k a {lower} {upper}) ⦄ → List (k × a) -> Map k a {lower} {upper}
+  assocs :  Map k a -> List (k × a)
+  assocs m = toAscList m
+  {-# COMPILE AGDA2HS assocs #-}
 
-  fromListWith : ∀ {lower upper : [ k ]∞} → ⦃ Ord k ⦄ → (a -> a -> a) -> List (k × a) -> Map k a {lower} {upper}
+  keysSet :  Map k a -> Sett.Sett k
+  keysSet Tip = Sett.Tip
+  keysSet (Bin sz  kx _ l r) = Sett.Bin sz  kx (keysSet l) (keysSet r)
+  {-# COMPILE AGDA2HS keysSet #-}
 
-  fromListWithKey : ∀ {lower upper : [ k ]∞} → ⦃ Ord k ⦄ → (k -> a -> a -> a) -> List (k × a) -> Map k a {lower} {upper}
+  fromSet :  (k -> a) -> Sett.Sett k -> Map k a
+  fromSet _ Sett.Tip = Tip
+  fromSet f (Sett.Bin sz  x l r) = let l' = (fromSet f l)
+                                       r' = (fromSet f r)
+                                   in Bin (size l' + size r' + 1) x (f x) l' r'
+  {-# COMPILE AGDA2HS fromSet #-}
 
-  toList : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> List (k × a)
 
-  toAscList : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> List (k × a)
+  {-# TERMINATING #-}
+  fromList :  ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → List (k × a) -> Map k a
+  fromList [] = Tip
+  fromList ((kx , x) ∷ []) = Bin 1 kx x Tip Tip
+  fromList  ((kx0 , x0) ∷ xs0) =
+      if (not_ordered kx0 xs0)
+      then (fromList' (Bin 1 kx0 x0 Tip Tip) xs0)
+      else (go 1 (Bin 1 kx0 x0 Tip Tip) xs0)
+    where
+      not_ordered : k → List (k × a) → Bool
+      not_ordered _ [] = false
+      not_ordered kx ((ky , _) ∷ _) = kx >= ky
 
-  toDescList : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} -> List (k × a)
+      fromList' : Map k a → List (k × a) → Map k a
+      fromList' t0 xs = Haskell.Prelude.foldl ins t0 xs
+        where
+          ins : Map k a → (k × a) → Map k a
+          ins t (k , x) = insert k x t
 
-  foldrFB : ∀ {lower upper : [ k ]∞} → (k -> a -> b -> b) -> b -> Map k a {lower} {upper} -> b
+      create : Nat → List (k × a) → (Map k a) × (List (k × a)) × (List (k × a))
+      create _ [] = (Tip , [] , [])
+      create 1 xs@((kx , x) ∷ xss) = if (not_ordered kx xss)
+              then (Bin 1 kx x Tip Tip , [] , xss)
+              else (Bin 1 kx x Tip Tip , xss , [])
+      create s xs@((kx , x) ∷ xss) = case (create (shiftR s 1) xs) of
+                λ {
+                  res@(_ , [] , _) -> res
+                ; (l , ((ky , y) ∷ []) , zs) -> (insertMax ky y l , [] , zs)
+                ; (l , ys@((ky , y) ∷ yss) , _) →
+                  if (not_ordered ky yss)
+                  then (l , [] , ys)
+                  else (case create (shiftR s 1) yss of
+                          λ { (r , zs , ws) -> (link ky y l r , zs , ws) })
+                }
 
-  foldlFB : ∀ {lower upper : [ k ]∞} → (b -> k -> a -> b) -> b -> Map k a {lower} {upper} -> b
+      go : Nat → Map k a → List (k × a) → Map k a
+      go _ t [] = t
+      go _ t ((kx , x) ∷ []) = insertMax kx x t
+      go s l xs@((kx , x) ∷ xss) =
+          if (not_ordered kx xss)
+          then (fromList' l xs)
+          else (case create s xss of
+                  λ {
+                    (r , ys , []) -> go (shiftL s 1) (link kx x l r) ys
+                  ; (r , _ ,  ys) -> fromList' (link kx x l r) ys
+                  })
 
-  fromAscList : ∀ {lower upper : [ k ]∞} → ⦃ Eq k ⦄ → List (k × a) -> Map k a {lower} {upper}
 
-  fromDescList : ∀ {lower upper : [ k ]∞} → ⦃ Eq k ⦄ → List (k × a) -> Map k a {lower} {upper}
+  fromListWithKey :   (k -> a -> a -> a) -> List (k × a) -> Map k a
+  fromListWithKey  f xs
+    = Haskell.Prelude.foldl ins empty xs
+    where
+      ins : Map k a → (k × a) → Map k a
+      ins t (k , x) = insertWithKey f k x t
 
-  fromAscListWith : ∀ {lower upper : [ k ]∞} → ⦃ Eq k ⦄ → (a -> a -> a) -> List (k × a) -> Map k a {lower} {upper}
+  fromListWith :   (a -> a -> a) -> List (k × a) -> Map k a
+  fromListWith f xs
+    = fromListWithKey (λ _ x y -> f x y) xs
 
-  fromDescListWith : ∀ {lower upper : [ k ]∞} → ⦃ Eq k ⦄ → (a -> a -> a) -> List (k × a) -> Map k a {lower} {upper}
+  toList :  Map k a -> List (k × a)
+  toList = toAscList
 
-  fromAscListWithKey : ∀ {lower upper : [ k ]∞} → ⦃ Eq k ⦄ → (k -> a -> a -> a) -> List (k × a) -> Map k a {lower} {upper}
+  foldrFB :  (k -> a -> b -> b) -> b -> Map k a -> b
+  foldrFB = foldrWithKey
 
-  fromDescListWithKey : ∀ {lower upper : [ k ]∞} → ⦃ Eq k ⦄ → (k -> a -> a -> a) -> List (k × a) -> Map k a {lower} {upper}
+  foldlFB :  (a -> k -> b -> a) -> a -> Map k b -> a
+  foldlFB = foldlWithKey
 
-  fromDistinctAscList : ∀ {lower upper : [ k ]∞} → List (k × a) -> Map k a {lower} {upper}
+  combineEq' : (k -> a -> a -> a) → (k × a) → List (k × a) → List (k × a)
+  combineEq' _ z [] = z ∷ []
+  combineEq' f z@(kz , zz) (x@(kx , xx) ∷ xs') =
+    if (kx == kz)
+    then (let yy = (f kx xx zz) in combineEq' f (kx , yy) xs')
+    else (z ∷ combineEq' f x xs')
 
-  fromDistinctDescList : ∀ {lower upper : [ k ]∞} → List (k × a) -> Map k a {lower} {upper}
+  combineEq :   (k -> a -> a -> a) → List (k × a) → List (k × a)
+  combineEq f xs' = case xs' of
+    λ {
+      []        -> []
+    ; (x ∷ [])  -> x ∷ []
+    ; (x ∷ xx)  -> combineEq' f x xx
+    }
+
+
+  {-# TERMINATING #-}
+  fromDistinctAscList :  List (k × a) -> Map k a
+  fromDistinctAscList [] = Tip
+  fromDistinctAscList  ((kx0 , x0) ∷ xs0) = go 1 (Bin 1 kx0 x0 Tip Tip) xs0
+    where
+      create : Nat → List (k × a) → (Map k a) × List (k × a)
+      create _ [] = (Tip , [])
+      create 1 xs@((kx , x) ∷ xs') = (Bin 1 kx x Tip Tip , xs')
+      create s xs@(x' ∷ xs') = case create (shiftR s 1) xs of
+                λ {
+                  res@(_ , []) -> res
+                ; (l , (ky , y) ∷ ys) -> case create (shiftR s 1) ys of
+                    λ { (r , zs) -> (link ky y l r , zs) }
+                }
+
+      go : Nat → Map k a → List (k × a) → Map k a
+      go _ t [] = t
+      go s l ((kx , x) ∷ xs) = case create s xs of
+        λ { (r , ys) -> let t' = link kx x l r
+                      in go (shiftL s 1) t' ys }
+
+  {-# TERMINATING #-}
+  fromDistinctDescList : List (k × a) -> Map k a
+  fromDistinctDescList [] = Tip
+  fromDistinctDescList  ((kx0 , x0) ∷ xs0) = go 1 (Bin 1 kx0 x0 Tip Tip) xs0
+    where
+      create : Nat → List (k × a) → (Map k a) × List (k × a)
+      create _ [] = (Tip , [])
+      create 1 xs@((kx , x) ∷ xs') = (Bin 1 kx x Tip Tip , xs')
+      create s xs@(x' ∷ xs') = case create (shiftR s 1) xs of
+                λ {
+                  res@(_ , []) -> res
+                ; (r , (ky , y) ∷ ys) -> case create (shiftR s 1) ys of
+                    λ { (l , zs) -> (link ky y l r , zs) }
+                }
+
+      go : Nat → Map k a → List (k × a) → Map k a
+      go _ t [] = t
+      go s r ((kx , x) ∷ xs) = case create s xs of
+        λ { (l , ys) -> let t' = link kx x l r
+                      in go (shiftL s 1) t' ys }
+
+  fromAscListWithKey :   (k -> a -> a -> a) -> List (k × a) -> Map k a
+  fromAscListWithKey f xs
+    = fromDistinctAscList (combineEq f xs)
+
+  fromDescListWithKey :   (k -> a -> a -> a) -> List (k × a) -> Map k a
+  fromDescListWithKey f xs
+    = fromDistinctDescList (combineEq f xs)
+
+  fromAscListWith :   (a -> a -> a) -> List (k × a) -> Map k a
+  fromAscListWith f xs
+    = fromAscListWithKey (λ _ x y -> f x y) xs
+
+  fromDescListWith :   (a -> a -> a) -> List (k × a) -> Map k a
+  fromDescListWith f xs
+    = fromDescListWithKey (λ _ x y -> f x y) xs
+
+  fromAscList :   List (k × a) -> Map k a
+  fromAscList  xs = fromDistinctAscList (combineEq (λ _ x _ → x) xs)
+
+  fromDescList :   List (k × a) -> Map k a
+  fromDescList  xs = fromDistinctDescList (combineEq (λ _ x _ → x) xs)
 
 
 open Lists public

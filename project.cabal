@@ -8,11 +8,30 @@ library
     hs-source-dirs:   build
     build-depends:
       base >= 4.11 && < 5,
-      containers
+      containers,
+      fin
     exposed-modules:
-      Data.Sett.Internal
+      Data.Map.Internal
     other-modules:
-      Project, Sample
-    autogen-modules:
-      Project, Sample,
-      Data.Sett.Internal
+      Sample,
+      Data.Map.Internal.Datatype,
+      Data.Map.Internal.Balancing,
+      Data.Map.Internal.Construction,
+      Data.Map.Internal.Deletion,
+      Data.Map.Internal.Differences,
+      Data.Map.Internal.Filtering,
+      Data.Map.Internal.Folding,
+      Data.Map.Internal.Indexing,
+      Data.Map.Internal.Inserting,
+      Data.Map.Internal.Instances,
+      Data.Map.Internal.Intersection,
+      Data.Map.Internal.Linking,
+      Data.Map.Internal.Lists,
+      Data.Map.Internal.Mapping,
+      Data.Map.Internal.Merging,
+      Data.Map.Internal.MinMax,
+      Data.Map.Internal.Operators,
+      Data.Map.Internal.Query,
+      Data.Map.Internal.Splitting,
+      Data.Map.Internal.Submapping,
+      Data.Map.Internal.Unions

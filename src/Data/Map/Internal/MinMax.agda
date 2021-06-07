@@ -5,9 +5,9 @@ open import Haskell.Prelude hiding (null)
 import Prelude hiding (null)
 #-}
 
-open import Data.Map.Datatype
+open import Data.Map.Internal.Datatype
 {-# FOREIGN AGDA2HS
-import Data.Map.Datatype
+import Data.Map.Internal.Datatype
 #-}
 
 open import Data.Map.Internal.Query
@@ -15,38 +15,121 @@ open import Data.Map.Internal.Query
 import Data.Map.Internal.Query
 #-}
 
+open import Data.Map.Internal.Balancing
+{-# FOREIGN AGDA2HS
+import Data.Map.Internal.Balancing
+#-}
+
+open import Data.Map.Internal.Linking
+{-# FOREIGN AGDA2HS
+import Data.Map.Internal.Linking
+#-}
+
 module MinMax {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
-  lookupMinSure : ∀ {lower upper : [ k ]∞} → k → a → Map k a {lower} {upper} → k × a
+  lookupMinSure : k → a → Map k a → k × a
+  lookupMinSure k a Tip = (k , a)
+  lookupMinSure _ _ (Bin _ kx x l _) = lookupMinSure kx x l
+  {-# COMPILE AGDA2HS lookupMinSure #-}
 
-  lookupMin : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Maybe (k × a)
+  lookupMin : Map k a → Maybe (k × a)
+  lookupMin Tip = Nothing
+  lookupMin (Bin _ kx x l _) = Just $! lookupMinSure kx x l
+  {-# COMPILE AGDA2HS lookupMin #-}
 
-  findMin : ∀ {lower upper : [ k ]∞} → (map : Map k a {lower} {upper}) → {IsTrue (not (null map))} → k × a
+  findMin : (map : Map k a) → {IsTrue (not (null map))} → k × a
+  findMin Tip = error "Map.findMin: empty map has no minimal element"
+  findMin (Bin _ kx x l _) = lookupMinSure kx x l
+  {-# COMPILE AGDA2HS findMin #-}
 
-  lookupMaxSure : ∀ {lower upper : [ k ]∞} → k → a → Map k a {lower} {upper} → k × a
+  lookupMaxSure : k → a → Map k a → k × a
+  lookupMaxSure k a Tip = (k , a)
+  lookupMaxSure _ _ (Bin _ kx x _ r) = lookupMaxSure kx x r
+  {-# COMPILE AGDA2HS lookupMaxSure #-}
 
-  lookupMax : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Maybe (k × a)
+  lookupMax : Map k a → Maybe (k × a)
+  lookupMax Tip = Nothing
+  lookupMax (Bin _ kx x _ r) = Just $! lookupMaxSure kx x r
+  {-# COMPILE AGDA2HS lookupMax #-}
 
-  findMax : ∀ {lower upper : [ k ]∞} → (map : Map k a {lower} {upper}) → {IsTrue (not (null map))} → k × a
+  findMax : (map : Map k a) → {IsTrue (not (null map))} → k × a
+  findMax Tip = error "Map.findMax: empty map has no maximal element"
+  findMax (Bin _ kx x _ r) = lookupMaxSure kx x r
+  {-# COMPILE AGDA2HS findMax #-}
 
-  deleteMin : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Map k a {lower} {upper}
+  deleteMin : Map k a → Map k a
+  deleteMin (Bin _ _  _ Tip r) = r
+  deleteMin (Bin _ kx x l@(Bin _ _ _ _ _) r) = balanceR kx x (deleteMin l) r
+  deleteMin Tip = Tip
+  {-# COMPILE AGDA2HS deleteMin #-}
 
-  deleteMax : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Map k a {lower} {upper}
+  deleteMax : Map k a → Map k a
+  deleteMax (Bin _ _  _ l Tip) = l
+  deleteMax (Bin _ kx x l r@(Bin _ _ _ _ _)) = balanceL kx x l (deleteMax r)
+  deleteMax Tip = Tip
+  {-# COMPILE AGDA2HS deleteMax #-}
 
-  updateMin : ∀ {lower upper : [ k ]∞} → (a → Maybe a) → Map k a {lower} {upper} → Map k a {lower} {upper}
 
-  updateMax : ∀ {lower upper : [ k ]∞} → (a → Maybe a) → Map k a {lower} {upper} → Map k a {lower} {upper}
+  updateMinWithKey : (k → a → Maybe a) → Map k a → Map k a
+  updateMinWithKey _ Tip                 = Tip
+  updateMinWithKey f (Bin sx kx x Tip r {szVal}) = case (f kx x) of
+      λ {
+        Nothing → r
+      ; (Just x') → Bin sx kx x' Tip r {szVal}
+      }
+  updateMinWithKey f (Bin _ kx x l@(Bin _ _ _ _ _) r)    = balanceR kx x (updateMinWithKey f l) r
+  {-# COMPILE AGDA2HS updateMinWithKey #-}
 
-  updateMinWithKey : ∀ {lower upper : [ k ]∞} → (k → a → Maybe a) → Map k a {lower} {upper} → Map k a {lower} {upper}
+  updateMin : (a → Maybe a) → Map k a → Map k a
+  updateMin f m = updateMinWithKey (λ _ x → f x) m
+  {-# COMPILE AGDA2HS updateMin #-}
 
-  updateMaxWithKey : ∀ {lower upper : [ k ]∞} → (k → a → Maybe a) → Map k a {lower} {upper} → Map k a {lower} {upper}
 
-  minViewWithKey : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Maybe ((k × a) × Map k a {lower} {upper})
+  updateMaxWithKey : (k → a → Maybe a) → Map k a → Map k a
+  updateMaxWithKey _ Tip                 = Tip
+  updateMaxWithKey f (Bin sx kx x l Tip {szVal}) = case (f kx x) of
+      λ {
+        Nothing → l
+      ; (Just x') → Bin sx kx x' l Tip {szVal}
+      }
+  updateMaxWithKey f (Bin _ kx x l r@(Bin _ _ _ _ _))    = balanceL kx x l (updateMaxWithKey f r)
+  {-# COMPILE AGDA2HS updateMaxWithKey #-}
 
-  maxViewWithKey : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Maybe ((k × a) × Map k a {lower} {upper})
+  updateMax : (a → Maybe a) → Map k a → Map k a
+  updateMax f m = updateMaxWithKey (λ _ x → f x) m
+  {-# COMPILE AGDA2HS updateMax #-}
 
-  minView : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Maybe (a × Map k a {lower} {upper})
 
-  maxView : ∀ {lower upper : [ k ]∞} → Map k a {lower} {upper} → Maybe (a × Map k a {lower} {upper})
+  minViewWithKey : Map k a → Maybe ((k × a) × Map k a)
+  minViewWithKey Tip = Nothing
+  minViewWithKey (Bin _ k x l r) = case (minViewSure k x l r) of
+      λ {
+        (MinViewCon km xm t) → Just ((km , xm) , t)
+      }
+  {-# COMPILE AGDA2HS minViewWithKey #-}
+
+  maxViewWithKey : Map k a → Maybe ((k × a) × Map k a)
+  maxViewWithKey Tip = Nothing
+  maxViewWithKey (Bin _ k x l r) = case (maxViewSure k x l r) of
+      λ {
+        (MaxViewCon km xm t) → Just ((km , xm) , t)
+      }
+  {-# COMPILE AGDA2HS maxViewWithKey #-}
+
+  minView : Map k a → Maybe (a × Map k a)
+  minView t = case (minViewWithKey t) of
+      λ {
+        Nothing → Nothing
+      ; (Just ((_ , x) , t')) → Just (x , t')
+      }
+  {-# COMPILE AGDA2HS minView #-}
+
+  maxView : Map k a → Maybe (a × Map k a)
+  maxView t = case (maxViewWithKey t) of
+      λ {
+        Nothing → Nothing
+      ; (Just ((_ , x) , t')) → Just (x , t')
+      }
+  {-# COMPILE AGDA2HS maxView #-}
 
 open MinMax public
