@@ -84,10 +84,8 @@ module Folding {k a : Set} ⦃ iOrdk : Ord k ⦄ where
     where
       go : Map k a -> m
       go Tip             = mempty
-      go (Bin sz k v l r) =
-        if sz == 1
-        then (f k v)
-        else (mappend (go l) (mappend (f k v) (go r)))
+      go (Bin 1 k v l r) = f k v
+      go (Bin _ k v l r) = mappend (go l) (mappend (f k v) (go r))
   {-# COMPILE AGDA2HS foldMapWithKey #-}
 
 
