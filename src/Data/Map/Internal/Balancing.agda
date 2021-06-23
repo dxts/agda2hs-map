@@ -14,9 +14,11 @@ import Data.Map.Internal.Datatype
 
 delta : Nat
 delta = 3
+{-# COMPILE AGDA2HS delta #-}
 
 ratio : Nat
 ratio = 2
+{-# COMPILE AGDA2HS ratio #-}
 
 module Balancing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 

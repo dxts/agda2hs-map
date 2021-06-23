@@ -30,7 +30,7 @@ postulate
 {- Nat subtraction -}
 subtract : (x y z : Nat) → {_ : compare x y ≡ GT} {@(tactic defaultTo {x ≡ x} refl) _ : z ≡ 1} → Nat
 subtract x y z {eq} {_} = _-_ (_-_ x y {{gtRewrite1 x y eq}}) 1 {{gtRewrite2 x y eq}}
-
+{-# COMPILE AGDA2HS subtract #-}
 
 module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 

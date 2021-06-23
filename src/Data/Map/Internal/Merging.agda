@@ -42,7 +42,7 @@ module Merging {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       go t1@(Bin _ _ _ _ _) Tip = g1 t1
       go (Bin _ kx x l1 r1) t2 = case (splitLookup kx t2) of
           λ {
-            (l2 , found , r2) → let l' = go l1 l2
+            (l2 , found , r2) → let l' = (go l1 l2)
                                     r' = (go r1 r2)
                 in case found of
                 λ {
