@@ -58,6 +58,3 @@ infix 1 begin_
 infix 3 _∎
 infixr 2 _≡⟨_⟩_
 infixr 2 _≡⟨⟩_
-
-postulate
-  ≡InstanceEquality : {x y : Set} → (p1 : x ≡ y) → (p2 : x ≡ y) → p1 ≡ p2

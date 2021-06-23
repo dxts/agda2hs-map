@@ -72,10 +72,10 @@ module MinMax {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   updateMinWithKey : (k → a → Maybe a) → Map k a → Map k a
   updateMinWithKey _ Tip                 = Tip
-  updateMinWithKey f (Bin sx kx x Tip r {szVal}) = case (f kx x) of
+  updateMinWithKey f (Bin sx kx x Tip r) = case (f kx x) of
       λ {
         Nothing → r
-      ; (Just x') → Bin sx kx x' Tip r {szVal}
+      ; (Just x') → Bin sx kx x' Tip r
       }
   updateMinWithKey f (Bin _ kx x l@(Bin _ _ _ _ _) r)    = balanceR kx x (updateMinWithKey f l) r
   {-# COMPILE AGDA2HS updateMinWithKey #-}
@@ -87,10 +87,10 @@ module MinMax {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   updateMaxWithKey : (k → a → Maybe a) → Map k a → Map k a
   updateMaxWithKey _ Tip                 = Tip
-  updateMaxWithKey f (Bin sx kx x l Tip {szVal}) = case (f kx x) of
+  updateMaxWithKey f (Bin sx kx x l Tip) = case (f kx x) of
       λ {
         Nothing → l
-      ; (Just x') → Bin sx kx x' l Tip {szVal}
+      ; (Just x') → Bin sx kx x' l Tip
       }
   updateMaxWithKey f (Bin _ kx x l r@(Bin _ _ _ _ _))    = balanceL kx x l (updateMaxWithKey f r)
   {-# COMPILE AGDA2HS updateMaxWithKey #-}

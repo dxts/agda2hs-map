@@ -89,16 +89,16 @@ module Intersection {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       }
   {-# COMPILE AGDA2HS intersectionWithKey #-}
 
-  disjoint : {b : Set} → Map k a → Map k b → Bool
-  disjoint Tip _ = true
-  disjoint _ Tip = true
-  disjoint (Bin sz k _ l r) t =
+  disjoNat : {b : Set} → Map k a → Map k b → Bool
+  disjoNat Tip _ = true
+  disjoNat _ Tip = true
+  disjoNat (Bin sz k _ l r) t =
       if (sz == 1)
       then (notMember k t)
       else case (splitMember k t) of
           λ {
-            (lt , found , gt) → not found && disjoint l lt && disjoint r gt
+            (lt , found , gt) → not found && disjoNat l lt && disjoNat r gt
           }
-  {-# COMPILE AGDA2HS disjoint #-}
+  {-# COMPILE AGDA2HS disjoNat #-}
 
 open Intersection public

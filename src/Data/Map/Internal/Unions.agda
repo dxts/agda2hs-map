@@ -37,10 +37,10 @@ module Unions {k a : Set} ⦃ iOrdk : Ord k ⦄ where
   -- [TODO] Note : check usage of Foldable.foldl vs Haskell.Prelude.foldl
 
   union : ⦃ Eq a ⦄ → ⦃ Eq (Map k a) ⦄ → Map k a → Map k a → Map k a
+  union Tip t2  = t2
   union t1 Tip  = t1
   union t1 (Bin _ k x Tip Tip) = insertR k x t1
   union (Bin _ k x Tip Tip) t2 = insert k x t2
-  union Tip t2 = t2
   union t1@(Bin _ k1 x1 l1 r1) t2 = case (split k1 t2) of
       λ {
         (l2 , r2) → let l1l2 = union l1 l2

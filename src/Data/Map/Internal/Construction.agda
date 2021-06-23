@@ -21,7 +21,3 @@ module Construction {k a : Set} ⦃ iOrdk : Ord k ⦄ where
   {-# COMPILE AGDA2HS singleton #-}
 
 open Construction public
-
-
-map1 : Map Nat Nat
-map1 = Bin 2 6 100 empty (singleton 7 100)

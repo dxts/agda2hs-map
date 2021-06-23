@@ -15,11 +15,6 @@ import Data.Sett.Internal as Sett
 import qualified Data.Set.Internal as Sett
 #-}
 
-open import Data.Utils.Bits
-{-# FOREIGN AGDA2HS
-import Data.Bits (shiftL, shiftR)
-#-}
-
 open import Data.Map.Internal.Construction
 {-# FOREIGN AGDA2HS
 import Data.Map.Internal.Construction
@@ -39,6 +34,13 @@ open import Data.Map.Internal.Linking
 {-# FOREIGN AGDA2HS
 import Data.Map.Internal.Linking
 #-}
+
+
+private
+  _divNat_ : Nat → Nat → Nat
+  m divNat 0 = 0
+  m divNat (suc n) = div-helper 0 n m n
+
 
 module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
@@ -98,14 +100,14 @@ module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       create 1 xs@((kx , x) ∷ xss) = if (not_ordered kx xss)
               then (Bin 1 kx x Tip Tip , [] , xss)
               else (Bin 1 kx x Tip Tip , xss , [])
-      create s xs@((kx , x) ∷ xss) = case (create (shiftR s 1) xs) of
+      create s xs@((kx , x) ∷ xss) = case (create (s divNat 2) xs) of
                 λ {
                   res@(_ , [] , _) -> res
                 ; (l , ((ky , y) ∷ []) , zs) -> (insertMax ky y l , [] , zs)
                 ; (l , ys@((ky , y) ∷ yss) , _) →
                   if (not_ordered ky yss)
                   then (l , [] , ys)
-                  else (case create (shiftR s 1) yss of
+                  else (case create (s divNat 2) yss of
                           λ { (r , zs , ws) -> (link ky y l r , zs , ws) })
                 }
 
@@ -117,7 +119,7 @@ module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
           then (fromList' l xs)
           else (case create s xss of
                   λ {
-                    (r , ys , []) -> go (shiftL s 1) (link kx x l r) ys
+                    (r , ys , []) -> go (s * 2) (link kx x l r) ys
                   ; (r , _ ,  ys) -> fromList' (link kx x l r) ys
                   })
 
@@ -166,10 +168,10 @@ module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       create : Nat → List (k × a) → (Map k a) × List (k × a)
       create _ [] = (Tip , [])
       create 1 xs@((kx , x) ∷ xs') = (Bin 1 kx x Tip Tip , xs')
-      create s xs@(x' ∷ xs') = case create (shiftR s 1) xs of
+      create s xs@(x' ∷ xs') = case create (s divNat 2) xs of
                 λ {
                   res@(_ , []) -> res
-                ; (l , (ky , y) ∷ ys) -> case create (shiftR s 1) ys of
+                ; (l , (ky , y) ∷ ys) -> case create (s divNat 2) ys of
                     λ { (r , zs) -> (link ky y l r , zs) }
                 }
 
@@ -177,7 +179,7 @@ module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       go _ t [] = t
       go s l ((kx , x) ∷ xs) = case create s xs of
         λ { (r , ys) -> let t' = link kx x l r
-                      in go (shiftL s 1) t' ys }
+                      in go (s * 2) t' ys }
 
   {-# TERMINATING #-}
   fromDistinctDescList : List (k × a) -> Map k a
@@ -187,10 +189,10 @@ module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       create : Nat → List (k × a) → (Map k a) × List (k × a)
       create _ [] = (Tip , [])
       create 1 xs@((kx , x) ∷ xs') = (Bin 1 kx x Tip Tip , xs')
-      create s xs@(x' ∷ xs') = case create (shiftR s 1) xs of
+      create s xs@(x' ∷ xs') = case create (s divNat 2) xs of
                 λ {
                   res@(_ , []) -> res
-                ; (r , (ky , y) ∷ ys) -> case create (shiftR s 1) ys of
+                ; (r , (ky , y) ∷ ys) -> case create (s divNat 2) ys of
                     λ { (l , zs) -> (link ky y l r , zs) }
                 }
 
@@ -198,7 +200,7 @@ module Lists {k a : Set} ⦃ iOrdk : Ord k ⦄ where
       go _ t [] = t
       go s r ((kx , x) ∷ xs) = case create s xs of
         λ { (l , ys) -> let t' = link kx x l r
-                      in go (shiftL s 1) t' ys }
+                      in go (s * 2) t' ys }
 
   fromAscListWithKey :   (k -> a -> a -> a) -> List (k × a) -> Map k a
   fromAscListWithKey f xs

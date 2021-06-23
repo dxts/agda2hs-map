@@ -3,7 +3,7 @@ module Data.Utils.Identity where
 open import Haskell.Prelude
 
 {-------------------
-  [Utility] Identity
+  Data.Functor.Identity
 -------------------}
 
 data Identity (a : Set) : Set where

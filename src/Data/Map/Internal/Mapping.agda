@@ -33,7 +33,7 @@ module Mapping {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   map : {b : Set} -> (a -> b) -> Map k a -> Map k b
   map f Tip = Tip
-  map f (Bin _ kx x l r) = bin kx (f x) (map f l) (map f r)
+  map f (Bin sz kx x l r) = Bin sz kx (f x) (map f l) (map f r)
   {-# COMPILE AGDA2HS map #-}
 
   mapWithKey : {b : Set} -> (k -> a -> b) -> Map k a -> Map k b
@@ -43,8 +43,7 @@ module Mapping {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   traverseWithKey : {b : Set} -> {t : Set → Set} → ⦃ Applicative t ⦄ → (k -> a -> t b) -> Map k a -> t (Map k b)
   traverseWithKey f Tip = pure Tip
-  traverseWithKey f (Bin 1 k v l r) = (λ v' -> Bin 1 k v' Tip Tip) <$> f k v
-  traverseWithKey f (Bin _ k v l r) = liftA3 (flip (bin k)) (traverseWithKey f l) (f k v) (traverseWithKey f r)
+  traverseWithKey f (Bin sz k v l r) = liftA3 (flip (Bin sz k)) (traverseWithKey f l) (f k v) (traverseWithKey f r)
   {-# COMPILE AGDA2HS traverseWithKey #-}
 
 

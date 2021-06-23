@@ -48,7 +48,7 @@ module Folding {k a : Set} ⦃ iOrdk : Ord k ⦄ where
   {-# COMPILE AGDA2HS foldl' #-}
 
   foldrWithKey : {b : Set} → (k -> a -> b -> b) -> b -> Map k a -> b
-  foldrWithKey {b} f z = go z
+  foldrWithKey {b} f z m = go z m
     where
       go : b → Map k a → b
       go z' Tip             = z'

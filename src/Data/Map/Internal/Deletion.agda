@@ -1,5 +1,7 @@
 module Data.Map.Internal.Deletion where
 
+{-# FOREIGN AGDA2HS {-# LANGUAGE FlexibleContexts #-} #-}
+
 open import Haskell.Prelude
 {-# FOREIGN AGDA2HS
 import Prelude
@@ -55,13 +57,13 @@ module Deletion {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   updateWithKey : (k → a → Maybe a) → k → Map k a → Map k a
   updateWithKey _ _ Tip               = Tip
-  updateWithKey f k (Bin sz kx x l r {szVal}) = case (compare k kx) of
+  updateWithKey f k (Bin sz kx x l r) = case (compare k kx) of
       λ {
         LT → balanceR kx x (updateWithKey f k l) r
       ; GT → balanceL kx x l (updateWithKey f k r)
       ; EQ → case (f kx x) of
           λ {
-            (Just x') → Bin sz kx x' l r {szVal}
+            (Just x') → Bin sz kx x' l r
           ; Nothing → glue l r
           }
       }
@@ -73,7 +75,7 @@ module Deletion {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   updateLookupWithKey : (k → a → Maybe a) → k → Map k a → (Maybe a × Map k a)
   updateLookupWithKey _ _ Tip               = (Nothing , Tip)
-  updateLookupWithKey f k (Bin sz kx x l r {szVal}) = case (compare k kx) of
+  updateLookupWithKey f k (Bin sz kx x l r) = case (compare k kx) of
       λ {
         LT → let res = updateLookupWithKey f k l
                  t' = balanceR kx x (snd res) r
@@ -83,7 +85,7 @@ module Deletion {k a : Set} ⦃ iOrdk : Ord k ⦄ where
                  in (fst res , t')
       ; EQ → case (f kx x) of
           λ {
-            (Just x') → (Just x' , Bin sz kx x' l r {szVal})
+            (Just x') → (Just x' , Bin sz kx x' l r)
           ; Nothing → (Just x , glue l r)
           }
       }
@@ -95,13 +97,13 @@ module Deletion {k a : Set} ⦃ iOrdk : Ord k ⦄ where
         Nothing → Tip
       ; (Just x) → singleton k x
       }
-  alter f k (Bin sz  kx x l r {szVal}) = case (compare k kx) of
+  alter f k (Bin sz  kx x l r) = case (compare k kx) of
       λ {
         LT → balance kx x (alter f k l) r
       ; GT → balance kx x l (alter f k r)
       ; EQ → case (f (Just x)) of
           λ {
-            (Just x') → Bin sz  kx x' l r {szVal}
+            (Just x') → Bin sz  kx x' l r
           ; Nothing → glue l r
           }
       }

@@ -9,14 +9,10 @@ import Prelude
 import Data.Nat (Nat)
 #-}
 
-open import Agda.Builtin.Reflection
 
 {-------------------
   Map
 -------------------}
-{- Default value tactic for implicit arguments -}
-defaultTo : {A : Set} (x : A) → Term → TC ⊤
-defaultTo x hole = bindTC (quoteTC x) (unify hole)
 
 
 mutual
@@ -24,7 +20,6 @@ mutual
   data Map (k : Set) (a : Set) : Set where
     Bin : (sz : Nat) → (kx : k) → (x : a)
           → (l : Map k a) → (r : Map k a)
-          → {@(tactic defaultTo {x ≡ x} refl) szVal : sz ≡ (size l) + (size r) + 1}
           → Map k a
     Tip : Map k a
   {-# COMPILE AGDA2HS Map #-}
@@ -35,5 +30,5 @@ mutual
   {-# COMPILE AGDA2HS size #-}
 
 bin : {k a : Set} → k → a → Map k a → Map k a → Map k a
-bin k x l r = (Bin (size l + size r + 1) k x l r)
+bin k x l r = Bin (size l + size r + 1) k x l r
 {-# COMPILE AGDA2HS bin #-}

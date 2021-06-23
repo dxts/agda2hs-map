@@ -30,11 +30,11 @@ module Indexing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
     where
       go :  Nat → (key : k) → (map : Map k a ) → {key ∈ map} → Nat
       go _   _ Tip  = error "Map.findIndex: element is not in the map"
-      go idx key (Bin sz kx x l r {szVal}) {prf} = match (compare key kx) {refl}
+      go idx key (Bin sz kx x l r) {prf} = match (compare key kx) {refl}
         where
           match : (o : Ordering) → {eq : compare key kx ≡ o} → Nat
-          match LT {eq} = go idx key l {∈L sz key kx x l r szVal eq prf}
-          match GT {eq} = go (idx + (size l) + 1) key r {∈R sz key kx x l r szVal eq prf}
+          match LT {eq} = go idx key l {∈L sz key kx x l r eq prf}
+          match GT {eq} = go (idx + (size l) + 1) key r {∈R sz key kx x l r eq prf}
           match EQ {eq} = idx + (size l)
   {-# COMPILE AGDA2HS findIndex #-}
 
@@ -54,12 +54,12 @@ module Indexing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   elemAt :  (n : Nat) → (map : Map k a ) → { (n < (size map)) ≡ true } → k × a
   elemAt _ Tip = error "Map.elemAt: index out of range"
-  elemAt i (Bin sz kx x l r {szVal}) {iVal} = match (compare i sizeL) {refl}
+  elemAt i (Bin sz kx x l r) {iVal} = match (compare i sizeL) {refl}
     where
       sizeL = (size l)
       match : (o : Ordering) → {eq : compare i sizeL ≡ o} → k × a
       match LT {eq} = elemAt i l {∈[L] i l eq}
-      match GT {eq} = elemAt (subtract i sizeL 1 {eq}) r {∈[R] i sz l r szVal iVal eq }
+      match GT {eq} = elemAt (subtract i sizeL 1 {eq}) r {∈[R] i sz l r iVal eq }
       match EQ {eq} = (kx , x)
   {-# COMPILE AGDA2HS elemAt #-}
 
@@ -116,29 +116,29 @@ module Indexing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   updateAt : (k → a → Maybe a) → (n : Nat) → (map : Map k a) → {(n < size map) ≡ true} → Map k a
   updateAt f i Tip = error "Map.updateAt: index out of range"
-  updateAt f i (Bin sz kx x l r {szVal}) {iVal} = match (compare i sizeL) {refl}
+  updateAt f i (Bin sz kx x l r) {iVal} = match (compare i sizeL) {refl}
     where
       sizeL = (size l)
       match : (o : Ordering) → {eq : compare i sizeL ≡ o} → Map k a
       match LT {eq} = balanceR kx x (updateAt f i l {∈[L] i l eq}) r
       match GT {eq} = balanceL kx x l (updateAt f (subtract i sizeL 1 {eq})
-                                        r { ∈[R] i sz l r szVal iVal eq} )
+                                        r { ∈[R] i sz l r iVal eq} )
       match EQ {eq} = case (f kx x) of
         λ {
-          (Just x') → Bin sz kx x' l r {szVal}
+          (Just x') → Bin sz kx x' l r
         ; Nothing → glue l r
         }
   {-# COMPILE AGDA2HS updateAt #-}
 
   deleteAt : (n : Nat) → (map : Map k a) → {(n < size map) ≡ true} → Map k a
   deleteAt i Tip = error "Map.updateAt: index out of range"
-  deleteAt i (Bin sz kx x l r {szVal}) {iVal} = match (compare i sizeL) {refl}
+  deleteAt i (Bin sz kx x l r) {iVal} = match (compare i sizeL) {refl}
     where
       sizeL = (size l)
       match : (o : Ordering) → {eq : compare i sizeL ≡ o} → Map k a
       match LT {eq} = balanceR kx x (deleteAt i l {∈[L] i l eq}) r
       match GT {eq} = balanceL kx x l (deleteAt (subtract i sizeL 1 {eq})
-                                        r { ∈[R] i sz l r szVal iVal eq } )
+                                        r { ∈[R] i sz l r iVal eq } )
       match EQ {eq} = glue l r
   {-# COMPILE AGDA2HS deleteAt #-}
 

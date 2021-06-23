@@ -6,6 +6,14 @@ open import Data.Map.Internal.Datatype
 
 open import Data.Utils.Reasoning
 
+{---------------------------}
+open import Agda.Builtin.Reflection
+
+{- Default value tactic for implicit arguments -}
+defaultTo : {A : Set} (x : A) → Term → TC ⊤
+defaultTo x hole = bindTC (quoteTC x) (unify hole)
+{---------------------------}
+
 
 postulate
   ltRewrite1 : (x y : Nat) → (prf : compare x y ≡ LT)
@@ -23,6 +31,7 @@ postulate
 subtract : (x y z : Nat) → {_ : compare x y ≡ GT} {@(tactic defaultTo {x ≡ x} refl) _ : z ≡ 1} → Nat
 subtract x y z {eq} {_} = _-_ (_-_ x y {{gtRewrite1 x y eq}}) 1 {{gtRewrite2 x y eq}}
 
+
 module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   {--------------------
@@ -31,7 +40,7 @@ module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   -- data _∈_ {k a : Set} : k → Map k a → Set where
   --   here : (sz : Nat) -> (kx : k) (x : a) -> (l r : Map k a) -> (szVal : sz ≡ (size l) + (size r) + 1)
-  --         -> kx ∈ (Bin sz kx x l r {szVal})
+  --         -> kx ∈ (Bin sz kx x l r)
 
   _∈_ : (key : k) → Map k a → Set
   _ ∈ Tip = ⊥
@@ -48,21 +57,19 @@ module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   ∈L :  (sz : Nat) (key kx : k) (x : a)
             → (l : Map k a ) (r : Map k a )
-            → (szVal : sz ≡ (size l) + (size r) + 1)
             → (eq : compare key kx ≡ LT)
-            → (prf : key ∈ (Bin sz kx x l r {szVal}))
+            → (prf : key ∈ (Bin sz kx x l r))
             → (key ∈ l)
-  ∈L sz key kx x l r szVal eq prf with (compare key kx)
+  ∈L sz key kx x l r eq prf with (compare key kx)
   ... | LT = prf
 
 
   ∈R :  (sz : Nat) (key kx : k) (x : a)
             → (l : Map k a ) (r : Map k a )
-            → (szVal : sz ≡ (size l) + (size r) + 1)
             → (eq : compare key kx ≡ GT)
-            → (prf : key ∈ (Bin sz kx x l r {szVal}))
+            → (prf : key ∈ (Bin sz kx x l r))
             → (key ∈ r)
-  ∈R sz key kx x l r szVal eq prf with compare key kx
+  ∈R sz key kx x l r eq prf with compare key kx
   ... | GT = prf
 
 
@@ -73,10 +80,10 @@ module Precondition {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 
   postulate
     ∈[R] :  (n sz : Nat) (l : Map k a ) (r : Map k a )
-          (szVal : sz ≡ (size l) + (size r) + 1) (nValid :  (n < sz) ≡ true)
+          → (nValid :  (n < sz) ≡ true)
           → (eq : compare n (size l) ≡ GT)
           → ((subtract n (size l) 1 {eq} {refl}) < size r) ≡ true
-  -- ∈[R] n sz kx x l r szVal {nValid} eq {nLB} {nLB2} with (compare n (size l))
+  -- ∈[R] n sz kx x l r {nValid} eq {nLB} {nLB2} with (compare n (size l))
   -- ... | GT = {!   !}
 
 open Precondition public

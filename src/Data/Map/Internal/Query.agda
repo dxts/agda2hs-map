@@ -45,11 +45,12 @@ module Query {k a : Set} ⦃ iOrdk : Ord k ⦄ where
   {-# COMPILE AGDA2HS notMember #-}
 
   find :  (key : k) (map : Map k a) → {key ∈ map} → a
-  find key t@(Bin sz kx x l r {szVal}) {prf} = match (compare {{iOrdk}} key kx) {refl}
+  find key Tip = error "Map.!: given key is not an element in the map"
+  find key t@(Bin sz kx x l r) {prf} = match (compare key kx) {refl}
     where
-      match : (o : Ordering) → {eq : compare {{iOrdk}} key kx ≡ o} → a
-      match LT {eq} = find key l {∈L sz key kx x l r szVal eq prf}
-      match GT {eq} = find key r {∈R sz key kx x l r szVal eq prf}
+      match : (o : Ordering) → {eq : compare key kx ≡ o} → a
+      match LT {eq} = find key l {∈L sz key kx x l r eq prf}
+      match GT {eq} = find key r {∈R sz key kx x l r eq prf}
       match EQ {eq} = x
   {-# COMPILE AGDA2HS find #-}
 
