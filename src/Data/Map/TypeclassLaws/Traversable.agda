@@ -16,9 +16,11 @@ open import Data.Utils.Reasoning
 
 traverseNaturalityMap : {k a b : Set} {{_ : Ord k}}
     → {p q : Set → Set} {{ap : Applicative p}} {{aq : Applicative q}}
-    → (f : a → p b) → (t : {x : Set} → p x → q x) → (m : Map k a)
+    → (t : {x : Set} → p x → q x) (preservePure : {A : Set} → (a : A) → t (pure a) ≡ pure a)
+    → (preserveApp : {A B : Set} → (g : p (A → B)) (a : p A) → t (g <*> a) ≡ (t g <*> t a))
+    → (f : a → p b) → (m : Map k a)
     → (t ∘ traverse f) m ≡ traverse (t ∘ f) m
-traverseNaturalityMap f t Tip = begin
+traverseNaturalityMap t preservePure preserveApp f Tip = begin
     t (traverse f Tip)
   ≡⟨⟩
     t (pure Tip)
@@ -27,11 +29,8 @@ traverseNaturalityMap f t Tip = begin
   ≡⟨⟩
     traverse (t ∘ f) Tip
   ∎
-  where
-    postulate
-      preservePure : {A : Set} → (a : A) → t (pure a) ≡ pure a
 
-traverseNaturalityMap {p = p} {q = q} {{ap = ap}} {{aq = aq}} f t (Bin sz kx x l r) = begin
+traverseNaturalityMap {p = p} {q = q} {{ap = ap}} {{aq = aq}} t preservePure preserveApp f (Bin sz kx x l r) = begin
     t (traverse f (Bin sz kx x l r))
   ≡⟨⟩
     t (liftA3 (flip (Bin sz kx)) (traverseWithKey (λ _ → f) l) (f x) (traverseWithKey (λ _ → f) r))
@@ -41,7 +40,7 @@ traverseNaturalityMap {p = p} {q = q} {{ap = ap}} {{aq = aq}} f t (Bin sz kx x l
   ≡⟨ preserveApp (pure (flip (Bin sz kx)) <*> (traverseWithKey (λ _ → f) l) <*> (f x)) (traverseWithKey (λ _ → f) r) ⟩
     t (pure (flip (Bin sz kx)) <*> (traverseWithKey (λ _ → f) l) <*> (f x)) <*> t (traverseWithKey (λ _ → f) r)
 
-  ≡⟨ cong (λ tr → t (pure (flip (Bin sz kx)) <*> (traverseWithKey (λ _ → f) l) <*> (f x)) <*> tr) (traverseNaturalityMap f t r) ⟩
+  ≡⟨ cong (λ tr → t (pure (flip (Bin sz kx)) <*> (traverseWithKey (λ _ → f) l) <*> (f x)) <*> tr) (traverseNaturalityMap t preservePure preserveApp f r) ⟩
     t (pure (flip (Bin sz kx)) <*> (traverseWithKey (λ _ → f) l) <*> (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)
 
   ≡⟨ cong (λ fst → fst <*> (traverseWithKey (λ _ → t ∘ f) r)) (preserveApp (pure (flip (Bin sz kx)) <*> (traverseWithKey (λ _ → f) l)) (f x)) ⟩
@@ -50,7 +49,7 @@ traverseNaturalityMap {p = p} {q = q} {{ap = ap}} {{aq = aq}} f t (Bin sz kx x l
   ≡⟨ cong (λ fst → fst <*> (t (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)) (preserveApp (pure (flip (Bin sz kx))) (traverseWithKey (λ _ → f) l)) ⟩
     t (pure (flip (Bin sz kx))) <*> t (traverseWithKey (λ _ → f) l) <*> (t (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)
 
-  ≡⟨ cong (λ tl → t (pure (flip (Bin sz kx))) <*> tl <*> (t (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)) (traverseNaturalityMap f t l) ⟩
+  ≡⟨ cong (λ tl → t (pure (flip (Bin sz kx))) <*> tl <*> (t (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)) (traverseNaturalityMap t preservePure preserveApp f l) ⟩
     t (pure (flip (Bin sz kx))) <*> (traverseWithKey (λ _ → t ∘ f) l) <*> (t (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)
 
   ≡⟨ cong (λ fst → fst <*> (traverseWithKey (λ _ → t ∘ f) l) <*> (t (f x)) <*> (traverseWithKey (λ _ → t ∘ f) r)) (preservePure (flip (Bin sz kx))) ⟩
@@ -61,10 +60,6 @@ traverseNaturalityMap {p = p} {q = q} {{ap = ap}} {{aq = aq}} f t (Bin sz kx x l
   ≡⟨⟩
     traverse (t ∘ f) (Bin sz kx x l r)
   ∎
-  where
-    postulate
-      preservePure : {A : Set} → (a : A) → t (pure a) ≡ pure a
-      preserveApp : {A B : Set} → (g : p (A → B)) (a : p A) → t (g <*> a) ≡ (t g <*> t a)
 
 
 

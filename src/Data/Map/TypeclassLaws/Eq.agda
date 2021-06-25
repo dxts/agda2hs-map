@@ -109,8 +109,8 @@ eqTransitivityMap m1 m2 m3 prf1 prf2 =
   f (Bin _ _ _ l r) = 1 + (f l)
   ```
 
-  map1 = Bin 2 "b" "b-val" (singleton "a" "a-val") (Tip)
-  map2 = Bin 2 "a" "a-val" (Tip) (singleton "b" "b-val")
+  map1 = Bin 2 "b" "val" (singleton "a" "val") (Tip)
+  map2 = Bin 2 "a" "val" (Tip) (singleton "b" "val")
 
   map1 == map2 ≡ true
 
