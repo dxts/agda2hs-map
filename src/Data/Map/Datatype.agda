@@ -3,9 +3,8 @@ module Data.Map.Datatype where
 
 open import Haskell.Prelude
 
-open import Data.Utils.PartialOrder
+open import Data.Utils.PartialOrder public
 
-open Data.Utils.PartialOrder public
 
 {-------------------
   Map
@@ -25,7 +24,7 @@ data Map k a ⦃ kOrd ⦄ {lower} {upper} where
         → {{_ : sz ≡ (size l) + (size r) + 1}}
         → Map k a {lower} {upper}
 
-  Tip : ⦃ l≤u : lower ≤ upper ⦄ → Map k a
+  Tip : ⦃ l≤u : lower ≤ upper ⦄ → Map k a {lower} {upper}
 {-# COMPILE AGDA2HS Map #-}
 
 

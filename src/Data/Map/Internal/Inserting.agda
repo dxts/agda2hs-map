@@ -5,11 +5,13 @@ open import Haskell.Prelude
 import Prelude
 #-}
 
-
 open import Data.Map.Datatype
 {-# FOREIGN AGDA2HS
 import Data.Map.Datatype
 #-}
+
+open import Data.Utils.Reasoning
+
 
 module Inserting {k a : Set} ⦃ iOrdk : Ord k ⦄ where
 

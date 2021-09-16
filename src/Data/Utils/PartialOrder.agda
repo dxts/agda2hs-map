@@ -43,25 +43,25 @@ module POrd {A : Set} ⦃ iOrdA : Ord A ⦄ where
   ≤-antisym eq1 eq2 = Ord-equiv (Ord-antisym {A} eq1 eq2)
 
 
-  data _≤∞_ : [ A ]∞ → [ A ]∞ → Set where
-    -∞-≤ :          -∞   ≤∞   y
-    []-≤ : x ≤ y → [ x ] ≤∞ [ y ]
-    +∞-≤ :           x   ≤∞  +∞
+  -- data _≤∞_ : [ A ]∞ → [ A ]∞ → Set where
+  --   -∞-≤ :          -∞   ≤∞   y
+  --   []-≤ : x ≤ y → [ x ] ≤∞ [ y ]
+  --   +∞-≤ :           x   ≤∞  +∞
 
-  []∞-refl : x ≤∞ x
-  []∞-refl { -∞}   = -∞-≤
-  []∞-refl {[ x ]} = []-≤ ≤-refl
-  []∞-refl { +∞}   = +∞-≤
+  -- []∞-refl : x ≤∞ x
+  -- []∞-refl { -∞}   = -∞-≤
+  -- []∞-refl {[ x ]} = []-≤ ≤-refl
+  -- []∞-refl { +∞}   = +∞-≤
 
-  []∞-trans : x ≤∞ y → y ≤∞ z → x ≤∞ z
-  []∞-trans -∞-≤       _          = -∞-≤
-  []∞-trans ([]-≤ x≤y) ([]-≤ y≤z) = []-≤ (≤-trans x≤y y≤z)
-  []∞-trans _          +∞-≤       = +∞-≤
+  -- []∞-trans : x ≤∞ y → y ≤∞ z → x ≤∞ z
+  -- []∞-trans -∞-≤       _          = -∞-≤
+  -- []∞-trans ([]-≤ x≤y) ([]-≤ y≤z) = []-≤ (≤-trans x≤y y≤z)
+  -- []∞-trans _          +∞-≤       = +∞-≤
 
-  []∞-antisym : x ≤∞ y → y ≤∞ x → x ≡ y
-  []∞-antisym -∞-≤       -∞-≤       = refl
-  []∞-antisym ([]-≤ x≤y) ([]-≤ y≤x) = cong [_] (≤-antisym x≤y y≤x)
-  []∞-antisym +∞-≤       +∞-≤       = refl
+  -- []∞-antisym : x ≤∞ y → y ≤∞ x → x ≡ y
+  -- []∞-antisym -∞-≤       -∞-≤       = refl
+  -- []∞-antisym ([]-≤ x≤y) ([]-≤ y≤x) = cong [_] (≤-antisym x≤y y≤x)
+  -- []∞-antisym +∞-≤       +∞-≤       = refl
 
   instance
     iEq[]∞ : Eq [ A ]∞

@@ -112,7 +112,7 @@ module Indexing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
                 }))
   {-# COMPILE AGDA2HS splitAt #-}
 
-  updateAt : (k → a → Maybe a) → (n : Nat) → (map : Map k a) → {(n <= size map) ≡ true} → Map k a
+  updateAt : (k → a → Maybe a) → (n : Nat) → (map : Map k a) → {(n < size map) ≡ true} → Map k a
   updateAt f i Tip = error "Map.updateAt: index out of range"
   updateAt f i (Bin sz kx x l r) = match (compare i sizeL) {refl}
     where
@@ -128,7 +128,7 @@ module Indexing {k a : Set} ⦃ iOrdk : Ord k ⦄ where
         }
   {-# COMPILE AGDA2HS updateAt #-}
 
-  deleteAt : (n : Nat) → (map : Map k a) → {(n <= size map) ≡ true} → Map k a
+  deleteAt : (n : Nat) → (map : Map k a) → {(n < size map) ≡ true} → Map k a
   deleteAt i Tip = error "Map.updateAt: index out of range"
   deleteAt {k} {a} i (Bin sz kx x l r) = match (compare i sizeL) {refl}
     where
