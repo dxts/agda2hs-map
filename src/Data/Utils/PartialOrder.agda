@@ -20,7 +20,7 @@ data [_]∞ (A : Set) : Set where
 
 module POrd {A : Set} ⦃ iOrdA : Ord A ⦄ where
 
-  {- NOTE : These proerties should be required while
+  {- NOTE : These properties should be required while
     defining an instance of Ord. -}
   postulate
     Ord-equiv : {A : Set} {x y : A} {{_ : Ord A}} → (x == y) ≡ true → x ≡ y
@@ -41,27 +41,6 @@ module POrd {A : Set} ⦃ iOrdA : Ord A ⦄ where
 
   ≤-antisym : x ≤ y → y ≤ x → x ≡ y
   ≤-antisym eq1 eq2 = Ord-equiv (Ord-antisym {A} eq1 eq2)
-
-
-  -- data _≤∞_ : [ A ]∞ → [ A ]∞ → Set where
-  --   -∞-≤ :          -∞   ≤∞   y
-  --   []-≤ : x ≤ y → [ x ] ≤∞ [ y ]
-  --   +∞-≤ :           x   ≤∞  +∞
-
-  -- []∞-refl : x ≤∞ x
-  -- []∞-refl { -∞}   = -∞-≤
-  -- []∞-refl {[ x ]} = []-≤ ≤-refl
-  -- []∞-refl { +∞}   = +∞-≤
-
-  -- []∞-trans : x ≤∞ y → y ≤∞ z → x ≤∞ z
-  -- []∞-trans -∞-≤       _          = -∞-≤
-  -- []∞-trans ([]-≤ x≤y) ([]-≤ y≤z) = []-≤ (≤-trans x≤y y≤z)
-  -- []∞-trans _          +∞-≤       = +∞-≤
-
-  -- []∞-antisym : x ≤∞ y → y ≤∞ x → x ≡ y
-  -- []∞-antisym -∞-≤       -∞-≤       = refl
-  -- []∞-antisym ([]-≤ x≤y) ([]-≤ y≤x) = cong [_] (≤-antisym x≤y y≤x)
-  -- []∞-antisym +∞-≤       +∞-≤       = refl
 
   instance
     iEq[]∞ : Eq [ A ]∞
@@ -85,16 +64,12 @@ module POrd {A : Set} ⦃ iOrdA : Ord A ⦄ where
 
 open POrd public
 
-module _ ⦃ iOrdA : Ord A ⦄ where
+-- instance
 
-  instance
-    -- -∞-≤-I : {y : [ A ]∞} → -∞ ≤ y
-    -- -∞-≤-I = refl
+--   +∞-≤-I : {{_ : Ord A}} → {x : [ A ]∞} → x ≤ +∞
+--   +∞-≤-I {x = -∞}     = refl
+--   +∞-≤-I {x = [ n ]}  = refl
+--   +∞-≤-I {x = +∞}     = refl
 
-    +∞-≤-I : {x : [ A ]∞} → x ≤ +∞
-    +∞-≤-I {x = -∞}     = refl
-    +∞-≤-I {x = [ n ]}  = refl
-    +∞-≤-I {x = +∞}     = refl
-
-    []-≤-I : {x y : A} ⦃ x≤y : x ≤ y ⦄ → [ x ] ≤ [ y ]
-    []-≤-I {x} {y} ⦃ x≤y ⦄ = x≤y
+--   []-≤-I : {{_ : Ord A}} → {x y : A} ⦃ x≤y : x ≤ y ⦄ → [ x ] ≤ [ y ]
+--   []-≤-I {x} {y} ⦃ x≤y ⦄ = x≤y
