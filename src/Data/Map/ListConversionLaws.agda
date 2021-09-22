@@ -69,10 +69,8 @@ toAscListRoundtrip (Bin sz kx x l r) =
     fromDistinctAscList (toAscList (Bin sz kx x l r))
   ≡⟨ cong (λ t → fromDistinctAscList t) (toAscListRewrite sz kx x l r) ⟩
     fromDistinctAscList ((toAscList l) ++ ((kx , x) ∷ []) ++ (toAscList r))
-
-  ≡⟨ {!   !} ⟩
+  ≡⟨ {!   !} ⟩ --TBD
     {!  !}
-
   ≡⟨⟩
     (Bin sz kx x l r)
   ∎

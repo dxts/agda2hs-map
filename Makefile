@@ -6,6 +6,7 @@ build:
 	mkdir -p build
 	@echo == Compiling project ==
 	agda2hs -o build src/Data/Map/Internal.agda
+	agda2hs -o build src/Data/Map'/Internal.agda
 
 try:
 	mkdir -p build
